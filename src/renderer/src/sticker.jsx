@@ -39,9 +39,28 @@ function Sticker() {
 
   if (!layout || !stickerUrl) return null
 
+  // Use percentage-based layout if available, else fallback to pixel values
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+  const left = layout.xPct !== undefined ? layout.xPct * winW : layout.x;
+  const top = layout.yPct !== undefined ? layout.yPct * winH : layout.y;
+  const width = layout.widthPct !== undefined ? layout.widthPct * winW : layout.width;
+  const height = layout.heightPct !== undefined ? layout.heightPct * winH : layout.height;
+
   return (
     <div id="sticker-container" style={{ width: '100%', height: '100%', pointerEvents: 'none', position: 'fixed' }}>
-      <img id="sticker-image" src={stickerUrl} alt="Sticker" style={{ position: 'absolute', left: layout.x, top: layout.y, width: layout.width, height: layout.height }} />
+      <img
+        id="sticker-image"
+        src={stickerUrl}
+        alt="Sticker"
+        style={{
+          position: 'absolute',
+          left,
+          top,
+          width,
+          height,
+        }}
+      />
     </div>
   )
 }

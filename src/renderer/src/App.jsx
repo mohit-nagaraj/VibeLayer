@@ -37,10 +37,47 @@ function App() {
   const toastTimeout = useRef(null)
   const [localFile, setLocalFile] = useState(null)
   const [localPreview, setLocalPreview] = useState(null)
+  const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 });
+  const [screenStream, setScreenStream] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => { fetchStickers() }, [tab])
   useEffect(() => { loadLayout() }, [])
   useEffect(() => { loadSettings() }, [])
+  useEffect(() => {
+    async function fetchScreenInfo() {
+      if (window.electron?.getScreenInfo) {
+        const info = await window.electron.getScreenInfo();
+        setScreenSize({ width: info.width, height: info.height });
+      }
+      if (window.electron?.getScreenStream) {
+        const stream = await window.electron.getScreenStream();
+        setScreenStream(stream);
+      }
+    }
+    fetchScreenInfo();
+  }, []);
+
+  useEffect(() => {
+    if (!screenStream || !canvasRef.current || !videoRef.current) return;
+    const video = videoRef.current;
+    video.srcObject = screenStream;
+    video.play();
+    let running = true;
+    function draw() {
+      if (!running) return;
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      setTimeout(draw, 200); // 5 FPS
+    }
+    video.onplay = draw;
+    return () => { running = false; };
+  }, [screenStream]);
+
+  const previewScale = 0.25;
+  const previewWidth = Math.round(screenSize.width * previewScale);
+  const previewHeight = Math.round(screenSize.height * previewScale);
 
   const showToast = (msg) => {
     setToast(msg)
@@ -190,14 +227,23 @@ function App() {
   }
   // Layout drag/resize
   const handleLayoutChange = (x, y, width, height) => {
-    const newLayout = { ...layout, x, y, width, height, sticker: activeSticker }
-    setLayout(newLayout)
-    saveLayout(newLayout)
+    const newLayout = {
+      ...layout,
+      xPct: x / previewWidth,
+      yPct: y / previewHeight,
+      widthPct: width / previewWidth,
+      heightPct: height / previewHeight,
+      sticker: activeSticker
+    };
+    setLayout(newLayout);
+    saveLayout(newLayout);
     if (window.electron?.ipcRenderer) {
-      // Use toFileUrl when sending to sticker window on layout change
-      window.electron.ipcRenderer.send('update-sticker-layout', { ...newLayout, stickerUrl: newLayout.sticker ? toFileUrl(newLayout.sticker.path) : undefined })
+      window.electron.ipcRenderer.send('update-sticker-layout', {
+        ...newLayout,
+        stickerUrl: newLayout.sticker ? toFileUrl(newLayout.sticker.path) : undefined
+      });
     }
-  }
+  };
   // Settings
   const handleSettingsChange = async (field, value) => {
     const newSettings = { ...settings, [field]: value }
@@ -280,16 +326,26 @@ function App() {
           </div>
           {/* Drag/resize preview for active sticker */}
           {activeSticker && (
-            <div style={{ position: 'relative', width: 600, height: 400, background: '#111', borderRadius: 16, margin: '0 auto' }}>
+            <div style={{ position: 'relative', width: previewWidth, height: previewHeight, background: '#111', borderRadius: 16, margin: '0 auto', overflow: 'hidden' }}>
+              {/* Live screen preview as background */}
+              <canvas ref={canvasRef} width={previewWidth} height={previewHeight} style={{ position: 'absolute', top: 0, left: 0, width: previewWidth, height: previewHeight, zIndex: 0 }} />
+              <video ref={videoRef} style={{ display: 'none' }} />
               <Rnd
-                size={{ width: layout.width, height: layout.height }}
-                position={{ x: layout.x, y: layout.y }}
-                onDragStop={(e, d) => handleLayoutChange(d.x, d.y, layout.width, layout.height)}
+                size={{
+                  width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                  height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                }}
+                position={{
+                  x: layout.xPct ? layout.xPct * previewWidth : layout.x,
+                  y: layout.yPct ? layout.yPct * previewHeight : layout.y
+                }}
+                onDragStop={(e, d) => handleLayoutChange(d.x, d.y, layout.widthPct ? layout.widthPct * previewWidth : layout.width, layout.heightPct ? layout.heightPct * previewHeight : layout.height)}
                 onResizeStop={(e, dir, ref, delta, pos) => handleLayoutChange(pos.x, pos.y, parseInt(ref.style.width), parseInt(ref.style.height))}
                 bounds="parent"
+                style={{ zIndex: 1 }}
               >
                 {/* Use toFileUrl for the active sticker preview */}
-                <img src={toFileUrl(activeSticker.path)} alt="active" style={{ width: '100%', height: '100%', borderRadius: 16, boxShadow: '0 0 16px #0008' }} />
+                <img src={toFileUrl(activeSticker.path)} alt="active" style={{ width: '100%', height: '100%', borderRadius: 16, boxShadow: '0 0 16px #0008', zIndex: 1 }} />
               </Rnd>
             </div>
           )}

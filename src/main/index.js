@@ -30,6 +30,8 @@ function createWindows() {
     width: 900,
     height: 670,
     frame: false,
+    x: 10,
+    y: 10,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
