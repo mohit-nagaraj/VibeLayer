@@ -1,4 +1,4 @@
-const { app, shell, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, desktopCapturer, screen  } = require('electron')
 const { join } = require('path')
 const { electronApp, optimizer, is } = require('@electron-toolkit/utils')
 const icon = join(__dirname, '../../resources/icon.png')
@@ -7,25 +7,38 @@ const path = require('path')
 const Store = require('electron-store')
 const AutoLaunch = require('auto-launch')
 
+ipcMain.handle('DESKTOP_CAPTURER_GET_SOURCES', (e, opts) =>
+  desktopCapturer.getSources(opts)
+);
+
 function createWindows() {
+  const { width, height } = screen.getPrimaryDisplay().bounds;
+
   const stickerWindow = new BrowserWindow({
-    transparent: true,
+    x: 0,
+    y: 0,
+    width,
+    height,
+    // --- critical flags ---
     frame: false,
+    // transparent: true,
+    thickFrame: false,          // windows only
+    fullscreenable: false,      // avoid buggy compositor path
+    backgroundColor: '#00000000',
+    // --- behaviour flags you already had ---
     alwaysOnTop: true,
-    hasShadow: false,
     resizable: false,
     skipTaskbar: true,
-    focusable: false,
-    fullscreen: true,
+    hasShadow: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname,'../preload/index.js'),
       sandbox: false,
-      webSecurity: false 
+      webSecurity: false
     }
   });
 
   stickerWindow.setIgnoreMouseEvents(true, { forward: true });
-
+  stickerWindow.setContentProtection(true); 
   const managerWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -45,6 +58,7 @@ function createWindows() {
   managerWindow.on('ready-to-show', () => {
     managerWindow.show();
   });
+  managerWindow.setContentProtection(true);
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     stickerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/sticker.html');

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { GiphyFetch } from '@giphy/js-fetch-api'
 import { createApi } from 'unsplash-js'
 import { Rnd } from 'react-rnd'
@@ -45,39 +45,142 @@ function App() {
   useEffect(() => { fetchStickers() }, [tab])
   useEffect(() => { loadLayout() }, [])
   useEffect(() => { loadSettings() }, [])
-  useEffect(() => {
-    async function fetchScreenInfo() {
-      if (window.electron?.getScreenInfo) {
-        const info = await window.electron.getScreenInfo();
-        setScreenSize({ width: info.width, height: info.height });
-      }
-      if (window.electron?.getScreenStream) {
-        const stream = await window.electron.getScreenStream();
-        setScreenStream(stream);
-      }
-    }
-    fetchScreenInfo();
-  }, []);
+    useEffect(() => {
+        (async () => {
+          // 1· Get screen size (unchanged)
+          if (window.electron?.getScreenInfo) {
+            const { width, height } = await window.electron.getScreenInfo();
+            setScreenSize({ width, height });
+          }
+      
+          // 2· Ask preload for the primary screen’s source-ID
+          if (window.electron?.getPrimaryScreenSourceId) {
+            const sourceId = await window.electron.getPrimaryScreenSourceId();
+      
+            // 3· Create a real MediaStream *in the renderer*
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: sourceId,
+                  minWidth: 1280,
+                  minHeight: 720,
+                  maxWidth: 9999,
+                  maxHeight: 9999
+                }
+              }
+            });
+            setScreenStream(stream);      // ← now a genuine MediaStream
+          }
+        })();
+      }, []);
+  
+    const previewScale = 0.25;
+    const previewWidth = Math.round(screenSize.width * previewScale);
+    const previewHeight = Math.round(screenSize.height * previewScale);
 
-  useEffect(() => {
-    if (!screenStream || !canvasRef.current || !videoRef.current) return;
-    const video = videoRef.current;
-    video.srcObject = screenStream;
-    video.play();
-    let running = true;
-    function draw() {
-      if (!running) return;
-      const ctx = canvasRef.current.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      setTimeout(draw, 200); // 5 FPS
-    }
-    video.onplay = draw;
-    return () => { running = false; };
-  }, [screenStream]);
+    const initDrawingIfReady = useCallback(() => {
+      // Make sure everything is ready
+      if (!screenStream || !videoRef.current || !canvasRef.current) return;
+    
+      const video  = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx    = canvas.getContext('2d');
+    
+      // Keep canvas in sync with preview dimensions
+      canvas.width  = previewWidth;
+      canvas.height = previewHeight;
+    
+      // Attach stream only once
+      if (!video.srcObject) {
+        video.srcObject   = screenStream;
+        video.muted       = true;
+        video.playsInline = true;       // avoids autoplay block :contentReference[oaicite:1]{index=1}
+      }
+    
+      // Start drawing after metadata is ready
+      const start = () => {
+        video.play().catch(console.error);   // handle promise   :contentReference[oaicite:2]{index=2}
+        const render = () => {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // canvas API :contentReference[oaicite:3]{index=3}
+          requestAnimationFrame(render);     // 60 fps & efficient :contentReference[oaicite:4]{index=4}
+        };
+        requestAnimationFrame(render);
+      };
+    
+      video.addEventListener('loadedmetadata', start, { once: true }); // fire when size known :contentReference[oaicite:5]{index=5}
+    }, [screenStream, previewWidth, previewHeight]);
+    
 
-  const previewScale = 0.25;
-  const previewWidth = Math.round(screenSize.width * previewScale);
-  const previewHeight = Math.round(screenSize.height * previewScale);
+    const handleVideoRef = useCallback(
+      (node) => {
+        if (node) {
+          console.log('Video node is ready');
+          videoRef.current = node;
+          initDrawingIfReady();
+        }
+      },
+      [screenStream, previewWidth, previewHeight]
+    );
+
+    const handleCanvasRef = useCallback( 
+      (node) => {
+        if (node) {
+          console.log('Canvas node is ready');
+          canvasRef.current = node; 
+          initDrawingIfReady();
+        }
+      },
+      [screenStream, previewWidth, previewHeight]
+    );
+    
+  
+  // useEffect(() => {
+  //   if (!screenStream){ 
+  //     console.log('Screen stream is not ready');
+  //     return; }
+  //    if(!videoRef.current) {
+  //     console.log('Video node is not ready');
+  //     return;
+  //    }
+  //    if(!canvasRef.current) {
+  //     console.log('Canvas node is not ready');
+  //     return;
+  //    }
+
+  //   const video  = videoRef.current;
+  //   const canvas = canvasRef.current;
+  //   const ctx    = canvas.getContext('2d');
+  
+  //   // Attach stream
+  //   video.srcObject   = screenStream;
+  //   video.muted       = true;       // autoplay safe
+  //   video.playsInline = true;
+  
+  //   // Draw once metadata is ready
+  //   const start = () => {
+  //     video.play().catch(console.error);   // handle any promise rejection
+  
+  //     // Make sure canvas always matches preview dimensions
+  //     canvas.width  = previewWidth;
+  //     canvas.height = previewHeight;
+  
+  //     const render = () => {
+  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  //       requestAnimationFrame(render);     // ~60 fps, feels live
+  //     };
+  //     requestAnimationFrame(render);
+  //   };
+  
+  //   video.addEventListener('loadedmetadata', start, { once: true });
+  
+  //   return () => {                       // cleanup on unmount/stream change
+  //     video.pause();
+  //     video.srcObject = null;
+  //   };
+  // }, [screenStream, previewWidth, previewHeight]);
+  
 
   const showToast = (msg) => {
     setToast(msg)
@@ -252,6 +355,10 @@ function App() {
     if (field === 'startup') await window.electron.ipcRenderer.invoke('set-auto-launch', value)
   }
 
+  console.log('screenStream:', screenStream);
+console.log('Constructor name:', screenStream?.constructor?.name);
+
+
   return (
     <div style={{ background: settings.theme === 'dark' ? '#18181b' : '#fff', color: settings.theme === 'dark' ? '#fff' : '#222', minHeight: '100vh', padding: 24 }}>
       <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
@@ -328,8 +435,8 @@ function App() {
           {activeSticker && (
             <div style={{ position: 'relative', width: previewWidth, height: previewHeight, background: '#111', borderRadius: 16, margin: '0 auto', overflow: 'hidden' }}>
               {/* Live screen preview as background */}
-              <canvas ref={canvasRef} width={previewWidth} height={previewHeight} style={{ position: 'absolute', top: 0, left: 0, width: previewWidth, height: previewHeight, zIndex: 0 }} />
-              <video ref={videoRef} style={{ display: 'none' }} />
+              <canvas ref={handleCanvasRef} width={previewWidth} height={previewHeight} style={{ position: 'absolute', top: 0, left: 0, width: previewWidth, height: previewHeight, zIndex: 0 }} />
+              <video ref={handleVideoRef} />
               <Rnd
                 size={{
                   width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
@@ -345,7 +452,7 @@ function App() {
                 style={{ zIndex: 1 }}
               >
                 {/* Use toFileUrl for the active sticker preview */}
-                <img src={toFileUrl(activeSticker.path)} alt="active" style={{ width: '100%', height: '100%', borderRadius: 16, boxShadow: '0 0 16px #0008', zIndex: 1 }} />
+                <img src={toFileUrl(activeSticker.path)} alt="active" style={{ width: '100%', height: '100%', zIndex: 1 }} />
               </Rnd>
             </div>
           )}
