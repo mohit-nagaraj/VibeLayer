@@ -8,6 +8,7 @@ import { Input } from './components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './components/ui/select'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import { DotPattern } from '../../components/magicui/dot-pattern'
+import CustomTitleBar from './components/CustomTitleBar'
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/');
@@ -330,8 +331,9 @@ console.log('Constructor name:', screenStream?.constructor?.name);
 
   return (
     <div className="min-h-screen w-full p-6 bg-background text-foreground grid grid-cols-1 relative overflow-hidden">
+      <CustomTitleBar title="VibeLayer" theme={settings.theme} />
       <DotPattern className="opacity-40 z-0 w-full h-full" />
-      <div className="relative z-10">
+      <div className="relative z-10 pt-10">
         <Tabs value={tab} onValueChange={setTab} className="mb-6">
           <TabsList>
             {TABS.map((t) => (
@@ -388,15 +390,15 @@ console.log('Constructor name:', screenStream?.constructor?.name);
                   {renameId === sticker.name ? (
                     <div className="flex gap-1">
                       <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} className="w-20" />
-                      <Button onClick={() => handleRename(sticker)} className="bg-primary">Save</Button>
-                      <Button onClick={() => { setRenameId(null); setRenameValue('') }} variant="destructive">Cancel</Button>
+                      <Button size="sm" className="h-6 px-2 text-xs bg-primary" onClick={() => handleRename(sticker)}>Save</Button>
+                      <Button size="sm" className="h-6 px-2 text-xs bg-destructive" onClick={() => { setRenameId(null); setRenameValue('') }}>Cancel</Button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                      <Button onClick={() => handleSetSticker(sticker)} className="bg-primary">Set</Button>
-                      <Button onClick={() => handleRemoveBg(sticker)} className="bg-green-600">Remove BG</Button>
-                      <Button onClick={() => handleDelete(sticker)} variant="destructive">Delete</Button>
-                      <Button onClick={() => { setRenameId(sticker.name); setRenameValue(sticker.name) }} className="bg-orange-500">Rename</Button>
+                      <Button size="sm" className="h-6 px-2 text-xs bg-primary" onClick={() => handleSetSticker(sticker)}>Set</Button>
+                      <Button size="sm" className="h-6 px-2 text-xs bg-green-600" onClick={() => handleRemoveBg(sticker)}>Remove BG</Button>
+                      <Button size="sm" className="h-6 px-2 text-xs bg-destructive" onClick={() => handleDelete(sticker)}>Delete</Button>
+                      <Button size="sm" className="h-6 px-2 text-xs bg-orange-500" onClick={() => { setRenameId(sticker.name); setRenameValue(sticker.name) }}>Rename</Button>
                     </div>
                   )}
                 </div>

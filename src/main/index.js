@@ -198,3 +198,19 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+ipcMain.handle('window-minimize', () => {
+  const win = BrowserWindow.getAllWindows().find(w => w.isFocused());
+  if (win) win.minimize();
+});
+ipcMain.handle('window-maximize', () => {
+  const win = BrowserWindow.getAllWindows().find(w => w.isFocused());
+  if (win) {
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
+  }
+});
+ipcMain.handle('window-close', () => {
+  const win = BrowserWindow.getAllWindows().find(w => w.isFocused());
+  if (win) win.close();
+});
