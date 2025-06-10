@@ -40,6 +40,10 @@ function createWindows() {
 
   stickerWindow.setIgnoreMouseEvents(true, { forward: true });
   stickerWindow.setContentProtection(true); 
+  const iconPath = is.dev
+    ? join(__dirname, '../../resources/icon.png')
+    : join(__dirname, '../../build/icon.png');
+
   const managerWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -48,7 +52,8 @@ function createWindows() {
     y: 10,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: iconPath,
+    title: 'VibeLayer',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,

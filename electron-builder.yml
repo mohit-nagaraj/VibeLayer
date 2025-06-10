@@ -1,7 +1,7 @@
 appId: com.electron.app
 productName: vibelayer
 directories:
-  buildResources: build
+  buildResources: resources
 files:
   - '!**/.vscode/*'
   - '!src/*'

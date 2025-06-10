@@ -56,5 +56,33 @@
     "react-dom": "^19.1.0",
     "tw-animate-css": "^1.3.4",
     "vite": "^6.2.6"
+  },
+  "build": {
+    "productName": "VibeLayer",
+    "appId": "com.mohitnagaraj.vibelayer",
+    "directories": {
+      "buildResources": "resources"
+    },
+    "files": [
+      "!**/.vscode/*",
+      "!src/*",
+      "!electron.vite.config.{js,ts,mjs,cjs}",
+      "!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}",
+      "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
+    ],
+    "asarUnpack": [
+      "resources/**"
+    ],
+    "icon": "resources/icon",
+    "win": {
+      "icon": "resources/icon.ico",
+      "executableName": "vibelayer"
+    },
+    "mac": {
+      "icon": "resources/icon.icns"
+    },
+    "linux": {
+      "icon": "resources/icon.png"
+    }
   }
 }
