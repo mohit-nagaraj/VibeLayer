@@ -11,6 +11,7 @@ ipcMain.handle('DESKTOP_CAPTURER_GET_SOURCES', (e, opts) =>
   desktopCapturer.getSources(opts)
 );
 
+let stickerWindowRef = null;
 function createWindows() {
   const { width, height } = screen.getPrimaryDisplay().bounds;
 
@@ -37,6 +38,7 @@ function createWindows() {
       webSecurity: false
     }
   });
+  stickerWindowRef = stickerWindow;
 
   stickerWindow.setIgnoreMouseEvents(true, { forward: true });
   stickerWindow.setContentProtection(true); 
@@ -218,4 +220,12 @@ ipcMain.handle('window-maximize', () => {
 ipcMain.handle('window-close', () => {
   const win = BrowserWindow.getAllWindows().find(w => w.isFocused());
   if (win) win.close();
+});
+
+ipcMain.handle('set-sticker-content-protection', (_, value) => {
+  if (stickerWindowRef && !stickerWindowRef.isDestroyed()) {
+    stickerWindowRef.setContentProtection(!!value);
+    return true;
+  }
+  return false;
 });

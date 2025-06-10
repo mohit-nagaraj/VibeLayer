@@ -38,7 +38,7 @@ function App() {
   const [renameId, setRenameId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [toast, setToast] = useState('')
-  const [settings, setSettings] = useState({ alwaysOnTop: true, theme: 'dark', startup: false })
+  const [settings, setSettings] = useState({ alwaysOnTop: true, theme: 'dark', startup: false, hideStickerCapture: true })
   const [autoLaunch, setAutoLaunch] = useState(false)
   const toastTimeout = useRef(null)
   const [localFile, setLocalFile] = useState(null)
@@ -184,6 +184,10 @@ function App() {
     await window.electron.ipcRenderer.invoke('set-settings', s)
     setSettings(s)
     showToast('Settings saved!')
+    // Send IPC to update sticker capture protection
+    if (typeof s.hideStickerCapture === 'boolean') {
+      window.electron.ipcRenderer.invoke('set-sticker-content-protection', s.hideStickerCapture)
+    }
   }
 
   const handleSearch = async () => {
@@ -428,18 +432,20 @@ console.log('Constructor name:', screenStream?.constructor?.name);
             )}
           </TabsContent>
           <TabsContent value="Settings">
-            <div className="max-w-sm">
-              <div className="mb-4">
-                <label className="flex items-center gap-2">
-                  <Input type="checkbox" checked={settings.alwaysOnTop} onChange={e => handleSettingsChange('alwaysOnTop', e.target.checked)} /> Always on top
-                </label>
+            <div className="max-w-sm flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <Input type="checkbox" checked={settings.alwaysOnTop} onChange={e => handleSettingsChange('alwaysOnTop', e.target.checked)} className="w-4 h-4" />
+                <span>Always on top</span>
               </div>
-              <div className="mb-4">
-                <label className="flex items-center gap-2">
-                  <Input type="checkbox" checked={autoLaunch} onChange={e => { setAutoLaunch(e.target.checked); handleSettingsChange('startup', e.target.checked) }} /> Start on system startup
-                </label>
+              <div className="flex items-center gap-3">
+                <Input type="checkbox" checked={autoLaunch} onChange={e => { setAutoLaunch(e.target.checked); handleSettingsChange('startup', e.target.checked) }} className="w-4 h-4" />
+                <span>Start on system startup</span>
               </div>
-              <div className="mb-4">
+              <div className="flex items-center gap-3">
+                <Input type="checkbox" checked={settings.hideStickerCapture} onChange={e => handleSettingsChange('hideStickerCapture', e.target.checked)} className="w-4 h-4" />
+                <span>Hide sticker capture</span>
+              </div>
+              <div className="flex items-center gap-3">
                 <label>Theme: </label>
                 <Select value={settings.theme} onValueChange={v => handleSettingsChange('theme', v)}>
                   <SelectTrigger className="w-32">
