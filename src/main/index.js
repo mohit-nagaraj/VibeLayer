@@ -23,7 +23,8 @@ function createWindows() {
     frame: false,
     // transparent: true,
     thickFrame: false,          // windows only
-    fullscreenable: false,      // avoid buggy compositor path
+    // fullscreenable: false,      // avoid buggy compositor path
+    fullscreen: true,
     backgroundColor: '#00000000',
     // --- behaviour flags you already had ---
     alwaysOnTop: true,
@@ -134,6 +135,42 @@ ipcMain.handle('set-auto-launch', async (_, enable) => {
   return true
 })
 ipcMain.handle('get-auto-launch', async () => appLauncher.isEnabled())
+
+ipcMain.handle('import-sticker-url', async (_, url) => {
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    throw new Error('URL is empty or invalid');
+  }
+  try {
+    const https = require('https');
+    const http = require('http');
+    const { extname } = require('path');
+    const { v4: uuidv4 } = require('uuid');
+    const validImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
+    const protocol = url.startsWith('https') ? https : http;
+    
+    // Download the image and validate content-type
+    const fileBuffer = await new Promise((resolve, reject) => {
+      protocol.get(url, (res) => {
+        const contentType = res.headers['content-type'];
+        if (!validImageTypes.includes(contentType)) {
+          reject(new Error('URL does not point to a valid image.'));
+          res.resume();
+          return;
+        }
+        const ext = contentType.split('/')[1] || 'png';
+        const data = [];
+        res.on('data', chunk => data.push(chunk));
+        res.on('end', () => resolve({ buffer: Buffer.concat(data), ext }));
+      }).on('error', reject);
+    });
+    const name = `sticker_${Date.now()}_${Math.floor(Math.random()*10000)}.${fileBuffer.ext}`;
+    const filePath = path.join(stickersDir, name);
+    fs.writeFileSync(filePath, fileBuffer.buffer);
+    return filePath;
+  } catch (err) {
+    throw new Error('Failed to import image from URL: ' + err.message);
+  }
+});
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')

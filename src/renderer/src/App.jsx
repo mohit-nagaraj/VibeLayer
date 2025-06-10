@@ -53,7 +53,7 @@ function App() {
             setScreenSize({ width, height });
           }
       
-          // 2· Ask preload for the primary screen’s source-ID
+          // 2· Ask preload for the primary screen's source-ID
           if (window.electron?.getPrimaryScreenSourceId) {
             const sourceId = await window.electron.getPrimaryScreenSourceId();
       
@@ -234,16 +234,22 @@ function App() {
   }
 
   const handleImportUrl = async () => {
-    setLoading(true)
+    if (!importUrl || !importUrl.trim()) {
+      showToast('Please enter a valid image URL.');
+      return;
+    }
+    setLoading(true);
     try {
-      const response = await fetch(importUrl)
-      const blob = await response.blob()
-      const arrayBuffer = await blob.arrayBuffer()
-      const ext = blob.type.split('/')[1] || 'png'
-      await saveSticker(arrayBuffer, ext)
-      setImportUrl('')
-    } catch (e) { showToast('Import failed!') }
-    setLoading(false)
+      const filePath = await window.electron.ipcRenderer.invoke('import-sticker-url', importUrl.trim());
+      if (filePath) {
+        fetchStickers();
+        showToast('Sticker imported!');
+        setImportUrl('');
+      }
+    } catch (e) {
+      showToast(e?.message || 'Import failed!');
+    }
+    setLoading(false);
   }
 
   const handleImportLocal = (e) => {
@@ -433,7 +439,7 @@ console.log('Constructor name:', screenStream?.constructor?.name);
           </div>
           {/* Drag/resize preview for active sticker */}
           {activeSticker && (
-            <div style={{ position: 'relative', width: previewWidth, height: previewHeight, background: '#111', borderRadius: 16, margin: '0 auto', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', width: previewWidth, height: previewHeight, background: '#111', borderRadius: 2, margin: '0 auto', overflow: 'hidden' }}>
               {/* Live screen preview as background */}
               <canvas ref={handleCanvasRef} width={previewWidth} height={previewHeight} style={{ position: 'absolute', top: 0, left: 0, width: previewWidth, height: previewHeight, zIndex: 0 }} />
               <video ref={handleVideoRef} />
