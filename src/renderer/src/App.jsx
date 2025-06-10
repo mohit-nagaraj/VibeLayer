@@ -4,6 +4,10 @@ import { createApi } from 'unsplash-js'
 import { Rnd } from 'react-rnd'
 import * as imglyRemoveBackground from '@imgly/background-removal'
 import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './components/ui/select'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
+import { DotPattern } from '../../components/magicui/dot-pattern'
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/');
@@ -46,96 +50,100 @@ function App() {
   useEffect(() => { fetchStickers() }, [tab])
   useEffect(() => { loadLayout() }, [])
   useEffect(() => { loadSettings() }, [])
-    useEffect(() => {
-        (async () => {
-          // 1· Get screen size (unchanged)
-          if (window.electron?.getScreenInfo) {
-            const { width, height } = await window.electron.getScreenInfo();
-            setScreenSize({ width, height });
-          }
-      
-          // 2· Ask preload for the primary screen's source-ID
-          if (window.electron?.getPrimaryScreenSourceId) {
-            const sourceId = await window.electron.getPrimaryScreenSourceId();
-      
-            // 3· Create a real MediaStream *in the renderer*
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: false,
-              video: {
-                mandatory: {
-                  chromeMediaSource: 'desktop',
-                  chromeMediaSourceId: sourceId,
-                  minWidth: 1280,
-                  minHeight: 720,
-                  maxWidth: 9999,
-                  maxHeight: 9999
-                }
-              }
-            });
-            setScreenStream(stream);      // ← now a genuine MediaStream
-          }
-        })();
-      }, []);
-  
-    const previewScale = 0.25;
-    const previewWidth = Math.round(screenSize.width * previewScale);
-    const previewHeight = Math.round(screenSize.height * previewScale);
-
-    const initDrawingIfReady = useCallback(() => {
-      // Make sure everything is ready
-      if (!screenStream || !videoRef.current || !canvasRef.current) return;
-    
-      const video  = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx    = canvas.getContext('2d');
-    
-      // Keep canvas in sync with preview dimensions
-      canvas.width  = previewWidth;
-      canvas.height = previewHeight;
-    
-      // Attach stream only once
-      if (!video.srcObject) {
-        video.srcObject   = screenStream;
-        video.muted       = true;
-        video.playsInline = true;       // avoids autoplay block :contentReference[oaicite:1]{index=1}
+  useEffect(() => {
+    (async () => {
+      // 1· Get screen size (unchanged)
+      if (window.electron?.getScreenInfo) {
+        const { width, height } = await window.electron.getScreenInfo();
+        setScreenSize({ width, height });
       }
-    
-      // Start drawing after metadata is ready
-      const start = () => {
-        video.play().catch(console.error);   // handle promise   :contentReference[oaicite:2]{index=2}
-        const render = () => {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // canvas API :contentReference[oaicite:3]{index=3}
-          requestAnimationFrame(render);     // 60 fps & efficient :contentReference[oaicite:4]{index=4}
-        };
-        requestAnimationFrame(render);
-      };
-    
-      video.addEventListener('loadedmetadata', start, { once: true }); // fire when size known :contentReference[oaicite:5]{index=5}
-    }, [screenStream, previewWidth, previewHeight]);
-    
-
-    const handleVideoRef = useCallback(
-      (node) => {
-        if (node) {
-          console.log('Video node is ready');
-          videoRef.current = node;
-          initDrawingIfReady();
-        }
-      },
-      [screenStream, previewWidth, previewHeight]
-    );
-
-    const handleCanvasRef = useCallback( 
-      (node) => {
-        if (node) {
-          console.log('Canvas node is ready');
-          canvasRef.current = node; 
-          initDrawingIfReady();
-        }
-      },
-      [screenStream, previewWidth, previewHeight]
-    );
   
+      // 2· Ask preload for the primary screen's source-ID
+      if (window.electron?.getPrimaryScreenSourceId) {
+        const sourceId = await window.electron.getPrimaryScreenSourceId();
+  
+        // 3· Create a real MediaStream *in the renderer*
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: sourceId,
+              minWidth: 1280,
+              minHeight: 720,
+              maxWidth: 9999,
+              maxHeight: 9999
+            }
+          }
+        });
+        setScreenStream(stream);      // ← now a genuine MediaStream
+      }
+    })();
+  }, []);
+  useEffect(() => { 
+    // Set dark mode class on root for shadcn/tailwind
+    document.documentElement.classList.toggle('dark', settings.theme === 'dark');
+  }, [settings.theme]);
+  
+  const previewScale = 0.25;
+  const previewWidth = Math.round(screenSize.width * previewScale);
+  const previewHeight = Math.round(screenSize.height * previewScale);
+
+  const initDrawingIfReady = useCallback(() => {
+    // Make sure everything is ready
+    if (!screenStream || !videoRef.current || !canvasRef.current) return;
+  
+    const video  = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx    = canvas.getContext('2d');
+  
+    // Keep canvas in sync with preview dimensions
+    canvas.width  = previewWidth;
+    canvas.height = previewHeight;
+  
+    // Attach stream only once
+    if (!video.srcObject) {
+      video.srcObject   = screenStream;
+      video.muted       = true;
+      video.playsInline = true;       // avoids autoplay block :contentReference[oaicite:1]{index=1}
+    }
+  
+    // Start drawing after metadata is ready
+    const start = () => {
+      video.play().catch(console.error);   // handle promise   :contentReference[oaicite:2]{index=2}
+      const render = () => {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // canvas API :contentReference[oaicite:3]{index=3}
+        requestAnimationFrame(render);     // 60 fps & efficient :contentReference[oaicite:4]{index=4}
+      };
+      requestAnimationFrame(render);
+    };
+  
+    video.addEventListener('loadedmetadata', start, { once: true }); // fire when size known :contentReference[oaicite:5]{index=5}
+  }, [screenStream, previewWidth, previewHeight]);
+  
+
+  const handleVideoRef = useCallback(
+    (node) => {
+      if (node) {
+        console.log('Video node is ready');
+        videoRef.current = node;
+        initDrawingIfReady();
+      }
+    },
+    [screenStream, previewWidth, previewHeight]
+  );
+
+  const handleCanvasRef = useCallback( 
+    (node) => {
+      if (node) {
+        console.log('Canvas node is ready');
+        canvasRef.current = node; 
+        initDrawingIfReady();
+      }
+    },
+    [screenStream, previewWidth, previewHeight]
+  );
+
 
   const showToast = (msg) => {
     setToast(msg)
@@ -321,126 +329,132 @@ console.log('Constructor name:', screenStream?.constructor?.name);
 
 
   return (
-    <div style={{ background: settings.theme === 'dark' ? '#18181b' : '#fff', color: settings.theme === 'dark' ? '#fff' : '#222', minHeight: '100vh', padding: 24 }}>
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
-        {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)} style={{ background: tab === t ? '#27272a' : 'transparent', color: 'inherit', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer' }}>{t}</button>
-        ))}
-      </div>
-      {toast && <div style={{ position: 'fixed', top: 24, right: 24, background: '#222', color: '#fff', padding: '12px 24px', borderRadius: 8, zIndex: 1000 }}>{toast}</div>}
-      {tab === 'Search' && (
-        <div>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for stickers or GIFs..." style={{ width: 300, padding: 8, borderRadius: 8, border: '1px solid #333', background: '#222', color: '#fff' }} />
-          <button onClick={handleSearch} style={{ marginLeft: 8, padding: '8px 16px', borderRadius: 8, background: '#27272a', color: '#fff', border: 'none' }}>Search</button>
-          {loading && <div style={{ marginTop: 16 }}>Loading...</div>}
-          <div style={{ marginTop: 24 }}>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {results.map((item, i) => (
-                <div key={i} style={{ background: '#222', padding: 8, borderRadius: 8 }}>
-                  <img src={item.thumb} alt="result" style={{ width: 100, height: 100, borderRadius: 8 }} />
-                  <button onClick={() => handleImport(item)} style={{ marginTop: 8, width: '100%', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', padding: 8 }}>Import</button>
-                </div>
-              ))}
+    <div className="min-h-screen w-full p-6 bg-background text-foreground grid grid-cols-1 relative overflow-hidden">
+      <DotPattern className="opacity-40 z-0 w-full h-full" />
+      <div className="relative z-10">
+        <Tabs value={tab} onValueChange={setTab} className="mb-6">
+          <TabsList>
+            {TABS.map((t) => (
+              <TabsTrigger key={t} value={t}>{t}</TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value="Search">
+            <div className="flex items-center mb-4">
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for stickers or GIFs..." className="w-72 mr-2" />
+              <Button onClick={handleSearch} disabled={loading}>Search</Button>
             </div>
-            {!search && (
-              <div style={{ marginTop: 32 }}>
-                <div>Import from URL:</div>
-                <input value={importUrl} onChange={e => setImportUrl(e.target.value)} placeholder="Paste image URL..." style={{ width: 300, padding: 8, borderRadius: 8, border: '1px solid #333', background: '#222', color: '#fff', marginRight: 8 }} />
-                <button onClick={handleImportUrl} style={{ padding: '8px 16px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none' }}>Import</button>
-                <div style={{ marginTop: 16 }}>
-                  <div>Import from local file:</div>
-                  <input type="file" accept="image/*" onChange={handleImportLocal} />
-                  {localFile && (
-                    <div style={{ marginTop: 8 }}>
-                      <span>{localFile.name}</span>
-                      <button onClick={handleImportLocalButton} style={{ marginLeft: 8, padding: '4px 12px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none' }}>Import</button>
-                      {localPreview && (
-                        <div style={{ marginTop: 8 }}>
-                          <img src={localPreview} alt="preview" style={{ width: 100, height: 100, borderRadius: 8 }} />
-                        </div>
-                      )}
+            {loading && <div className="mt-4">Loading...</div>}
+            <div className="mt-6">
+              <div className="flex gap-4 flex-wrap">
+                {results.map((item, i) => (
+                  <div key={i} className="bg-muted p-2 rounded-lg">
+                    <img src={item.thumb} alt="result" className="w-24 h-24 rounded-lg" />
+                    <Button onClick={() => handleImport(item)} className="mt-2 w-full">Import</Button>
+                  </div>
+                ))}
+              </div>
+              {!search && (
+                <div className="mt-8">
+                  <div>Import from URL:</div>
+                  <div className="flex items-center mt-2">
+                    <Input value={importUrl} onChange={e => setImportUrl(e.target.value)} placeholder="Paste image URL..." className="w-72 mr-2" />
+                    <Button onClick={handleImportUrl}>Import</Button>
+                  </div>
+                  <div className="mt-4">
+                    <div>Import from local file:</div>
+                    <Input type="file" accept="image/*" onChange={handleImportLocal} className="mt-2" />
+                    {localFile && (
+                      <div className="mt-2 flex items-center">
+                        <span>{localFile.name}</span>
+                        <Button onClick={handleImportLocalButton} className="ml-2">Import</Button>
+                        {localPreview && (
+                          <div className="mt-2">
+                            <img src={localPreview} alt="preview" className="w-24 h-24 rounded-lg" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          <TabsContent value="Layout">
+            <div className="flex gap-4 flex-wrap mb-8">
+              {stickers.length === 0 && <div>No stickers yet.</div>}
+              {stickers.map((sticker, i) => (
+                <div key={i} className="bg-muted p-2 rounded-lg flex flex-col items-center">
+                  <img src={toFileUrl(sticker.path)} alt="sticker" className="w-24 h-24 rounded-lg mb-2" />
+                  {renameId === sticker.name ? (
+                    <div className="flex gap-1">
+                      <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} className="w-20" />
+                      <Button onClick={() => handleRename(sticker)} className="bg-primary">Save</Button>
+                      <Button onClick={() => { setRenameId(null); setRenameValue('') }} variant="destructive">Cancel</Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleSetSticker(sticker)} className="bg-primary">Set</Button>
+                      <Button onClick={() => handleRemoveBg(sticker)} className="bg-green-600">Remove BG</Button>
+                      <Button onClick={() => handleDelete(sticker)} variant="destructive">Delete</Button>
+                      <Button onClick={() => { setRenameId(sticker.name); setRenameValue(sticker.name) }} className="bg-orange-500">Rename</Button>
                     </div>
                   )}
                 </div>
+              ))}
+            </div>
+            {activeSticker && (
+              <div className="relative mx-auto" style={{ width: previewWidth, height: previewHeight, background: '#111', borderRadius: 2, overflow: 'hidden' }}>
+                <canvas ref={handleCanvasRef} width={previewWidth} height={previewHeight} className="absolute top-0 left-0 w-full h-full z-0" />
+                <video ref={handleVideoRef} />
+                <Rnd
+                  size={{
+                    width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                    height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                  }}
+                  position={{
+                    x: layout.xPct ? layout.xPct * previewWidth : layout.x,
+                    y: layout.yPct ? layout.yPct * previewHeight : layout.y
+                  }}
+                  onDragStop={(e, d) => handleLayoutChange(d.x, d.y, layout.widthPct ? layout.widthPct * previewWidth : layout.width, layout.heightPct ? layout.heightPct * previewHeight : layout.height)}
+                  onResizeStop={(e, dir, ref, delta, pos) => handleLayoutChange(pos.x, pos.y, parseInt(ref.style.width), parseInt(ref.style.height))}
+                  bounds="parent"
+                  style={{ zIndex: 1 }}
+                >
+                  <img src={toFileUrl(activeSticker.path)} alt="active" className="w-full h-full z-1" />
+                </Rnd>
               </div>
             )}
-          </div>
-        </div>
-      )}
-      {tab === 'Layout' && (
-        <div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
-            {stickers.length === 0 && <div>No stickers yet.</div>}
-            {stickers.map((sticker, i) => (
-              <div key={i} style={{ background: '#222', padding: 8, borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                {/* Use toFileUrl for displaying sticker images */}
-                <img src={toFileUrl(sticker.path)} alt="sticker" style={{ width: 100, height: 100, borderRadius: 8, marginBottom: 8 }} />
-                {renameId === sticker.name ? (
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <input value={renameValue} onChange={e => setRenameValue(e.target.value)} style={{ width: 80 }} />
-                    <button onClick={() => handleRename(sticker)} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px' }}>Save</button>
-                    <button onClick={() => { setRenameId(null); setRenameValue('') }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px' }}>Cancel</button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => handleSetSticker(sticker)} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px' }}>Set</button>
-                    <button onClick={() => handleRemoveBg(sticker)} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px' }}>Remove BG</button>
-                    <button onClick={() => handleDelete(sticker)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px' }}>Delete</button>
-                    <button onClick={() => { setRenameId(sticker.name); setRenameValue(sticker.name) }} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 8px' }}>Rename</button>
-                  </div>
-                )}
+          </TabsContent>
+          <TabsContent value="Settings">
+            <div className="max-w-sm">
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <Input type="checkbox" checked={settings.alwaysOnTop} onChange={e => handleSettingsChange('alwaysOnTop', e.target.checked)} /> Always on top
+                </label>
               </div>
-            ))}
-          </div>
-          {/* Drag/resize preview for active sticker */}
-          {activeSticker && (
-            <div style={{ position: 'relative', width: previewWidth, height: previewHeight, background: '#111', borderRadius: 2, margin: '0 auto', overflow: 'hidden' }}>
-              {/* Live screen preview as background */}
-              <canvas ref={handleCanvasRef} width={previewWidth} height={previewHeight} style={{ position: 'absolute', top: 0, left: 0, width: previewWidth, height: previewHeight, zIndex: 0 }} />
-              <video ref={handleVideoRef} />
-              <Rnd
-                size={{
-                  width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                  height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
-                }}
-                position={{
-                  x: layout.xPct ? layout.xPct * previewWidth : layout.x,
-                  y: layout.yPct ? layout.yPct * previewHeight : layout.y
-                }}
-                onDragStop={(e, d) => handleLayoutChange(d.x, d.y, layout.widthPct ? layout.widthPct * previewWidth : layout.width, layout.heightPct ? layout.heightPct * previewHeight : layout.height)}
-                onResizeStop={(e, dir, ref, delta, pos) => handleLayoutChange(pos.x, pos.y, parseInt(ref.style.width), parseInt(ref.style.height))}
-                bounds="parent"
-                style={{ zIndex: 1 }}
-              >
-                {/* Use toFileUrl for the active sticker preview */}
-                <img src={toFileUrl(activeSticker.path)} alt="active" style={{ width: '100%', height: '100%', zIndex: 1 }} />
-              </Rnd>
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <Input type="checkbox" checked={autoLaunch} onChange={e => { setAutoLaunch(e.target.checked); handleSettingsChange('startup', e.target.checked) }} /> Start on system startup
+                </label>
+              </div>
+              <div className="mb-4">
+                <label>Theme: </label>
+                <Select value={settings.theme} onValueChange={v => handleSettingsChange('theme', v)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="light">Light</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-        </div>
-      )}
-      {tab === 'Settings' && (
-        <div style={{ maxWidth: 400 }}>
-          <div style={{ marginBottom: 16 }}>
-            <label>
-              <input type="checkbox" checked={settings.alwaysOnTop} onChange={e => handleSettingsChange('alwaysOnTop', e.target.checked)} /> Always on top
-            </label>
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label>
-              <input type="checkbox" checked={autoLaunch} onChange={e => { setAutoLaunch(e.target.checked); handleSettingsChange('startup', e.target.checked) }} /> Start on system startup
-            </label>
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label>Theme: </label>
-            <select value={settings.theme} onChange={e => handleSettingsChange('theme', e.target.value)}>
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </div>
-        </div>
-      )}
+          </TabsContent>
+        </Tabs>
+        {toast && <div className="fixed top-6 right-6 bg-muted text-foreground px-6 py-3 rounded-lg z-50 shadow-lg">{toast}</div>}
       </div>
+    </div>
   )
 }
 
