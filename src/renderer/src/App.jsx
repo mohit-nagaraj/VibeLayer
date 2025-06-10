@@ -3,6 +3,7 @@ import { GiphyFetch } from '@giphy/js-fetch-api'
 import { createApi } from 'unsplash-js'
 import { Rnd } from 'react-rnd'
 import * as imglyRemoveBackground from '@imgly/background-removal'
+import { Button } from './components/ui/button'
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/');
@@ -134,52 +135,6 @@ function App() {
       },
       [screenStream, previewWidth, previewHeight]
     );
-    
-  
-  // useEffect(() => {
-  //   if (!screenStream){ 
-  //     console.log('Screen stream is not ready');
-  //     return; }
-  //    if(!videoRef.current) {
-  //     console.log('Video node is not ready');
-  //     return;
-  //    }
-  //    if(!canvasRef.current) {
-  //     console.log('Canvas node is not ready');
-  //     return;
-  //    }
-
-  //   const video  = videoRef.current;
-  //   const canvas = canvasRef.current;
-  //   const ctx    = canvas.getContext('2d');
-  
-  //   // Attach stream
-  //   video.srcObject   = screenStream;
-  //   video.muted       = true;       // autoplay safe
-  //   video.playsInline = true;
-  
-  //   // Draw once metadata is ready
-  //   const start = () => {
-  //     video.play().catch(console.error);   // handle any promise rejection
-  
-  //     // Make sure canvas always matches preview dimensions
-  //     canvas.width  = previewWidth;
-  //     canvas.height = previewHeight;
-  
-  //     const render = () => {
-  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  //       requestAnimationFrame(render);     // ~60 fps, feels live
-  //     };
-  //     requestAnimationFrame(render);
-  //   };
-  
-  //   video.addEventListener('loadedmetadata', start, { once: true });
-  
-  //   return () => {                       // cleanup on unmount/stream change
-  //     video.pause();
-  //     video.srcObject = null;
-  //   };
-  // }, [screenStream, previewWidth, previewHeight]);
   
 
   const showToast = (msg) => {
