@@ -2,13 +2,13 @@
 
 > **Let your desktop vibe with you!**
 
-VibeLayer is not just another app—it's your *adorable*, always-on-top, see-through sticker buddy! Overlay cute, quirky, or motivational stickers (with transparent backgrounds!) right on your desktop. Make your workspace fun, personal, and a little bit magical. ✨
+VibeLayer is not just another app—it's your _adorable_, always-on-top, see-through sticker buddy! Overlay cute, quirky, or motivational stickers (with transparent backgrounds!) right on your desktop. Make your workspace fun, personal, and a little bit magical. ✨
 
 ---
 
 ## 🎉 What Makes VibeLayer Awesome?
 
-- **🖼️ Transparent Stickers:** Place stickers *anywhere* on your screen. They float above your work, always on top, always adorable.
+- **🖼️ Transparent Stickers:** Place stickers _anywhere_ on your screen. They float above your work, always on top, always adorable.
 - **🌐 Import from Anywhere:**
   - **Local files:** Drag, drop, or select images from your computer.
   - **Direct URLs:** Paste any image link and boom—sticker!
@@ -21,14 +21,14 @@ VibeLayer is not just another app—it's your *adorable*, always-on-top, see-thr
   - Start with your computer (auto-launch)
   - Hide sticker capture (for secret vibes)
   - Dark & light themes (for every mood)
-- **🔒 Privacy First:** Stickers and settings are stored *locally*. No cloud, no snooping.
+- **🔒 Privacy First:** Stickers and settings are stored _locally_. No cloud, no snooping.
 - **💻 Cross-Platform:** Windows, macOS, Linux—everyone gets to vibe!
 
 ---
 
 ## 🖼️ Screenshots
 
-*(Insert some cute screenshots or GIFs of stickers floating on your desktop!)*
+_(Insert some cute screenshots or GIFs of stickers floating on your desktop!)_
 
 ---
 
@@ -66,23 +66,27 @@ yarn build:linux
 ## 🦊 How to Use Your New Desktop Buddy
 
 ### 1. **Import Stickers**
+
 - **Local File:** Drag and drop or click to select images.
 - **URL:** Paste any direct image link (PNG, GIF, etc.).
 - **Online Search:** Search for GIFs (Giphy) or images (Unsplash) and import with a click.
 
 ### 2. **Manage Your Collection**
+
 - **Set as Active:** Click "Set" to float a sticker on your desktop.
 - **Remove Background:** Click "Remove BG" for instant transparency.
 - **Rename/Delete:** Keep your sticker family organized.
 
 ### 3. **Layout & Positioning**
+
 - Drag and resize stickers in the "Layout" tab.
 - Layouts are saved—your desktop stays just how you like it.
 
 ### 4. **Settings for Every Mood**
+
 - **Always on Top:** Stickers never hide, even when you're busy.
 - **Start on Boot:** VibeLayer wakes up with your computer.
-- **Hide Sticker Capture:** For when you want your stickers to be *extra* private.
+- **Hide Sticker Capture:** For when you want your stickers to be _extra_ private.
 - **Theme:** Dark or light—pick your vibe.
 
 ---
@@ -119,7 +123,7 @@ yarn build:linux
 
 ## 📜 License
 
-*(Add your license here, e.g., MIT, GPL, etc.)*
+_(Add your license here, e.g., MIT, GPL, etc.)_
 
 ---
 
@@ -133,4 +137,4 @@ yarn build:linux
 
 ---
 
-> **VibeLayer** — Because your desktop deserves a little *personality*!
+> **VibeLayer** — Because your desktop deserves a little _personality_!

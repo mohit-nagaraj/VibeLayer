@@ -5,24 +5,30 @@ import { Rnd } from 'react-rnd'
 import * as imglyRemoveBackground from '@imgly/background-removal'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './components/ui/select'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from './components/ui/select'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import { DotPattern } from '../../components/magicui/dot-pattern'
 import CustomTitleBar from './components/CustomTitleBar'
 import { ArrowDownToLine, Globe, SearchIcon } from 'lucide-react'
-import { Label } from "./components/ui/label"
+import { Label } from './components/ui/label'
 import { Card } from './components/ui/card'
 
 function toFileUrl(filePath) {
-  let path = filePath.replace(/\\/g, '/');
+  let path = filePath.replace(/\\/g, '/')
 
   if (/^[A-Za-z]:\//.test(path)) {
     // Ensure three slashes for Windows drive paths and encode the path
-    return 'file:///' + encodeURI(path);
+    return 'file:///' + encodeURI(path)
   }
 
   // Handle other paths (e.g., network paths, relative paths)
-  return 'file://' + encodeURI(path);
+  return 'file://' + encodeURI(path)
 }
 
 const gf = new GiphyFetch(import.meta.env.VITE_GIPHY_API_KEY || '')
@@ -41,30 +47,41 @@ function App() {
   const [renameId, setRenameId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const [toast, setToast] = useState('')
-  const [settings, setSettings] = useState({ alwaysOnTop: true, theme: 'dark', startup: false, hideStickerCapture: true })
+  const [settings, setSettings] = useState({
+    alwaysOnTop: true,
+    theme: 'dark',
+    startup: false,
+    hideStickerCapture: true
+  })
   const [autoLaunch, setAutoLaunch] = useState(false)
   const toastTimeout = useRef(null)
   const [localFile, setLocalFile] = useState(null)
   const [localPreview, setLocalPreview] = useState(null)
-  const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 });
-  const [screenStream, setScreenStream] = useState(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 })
+  const [screenStream, setScreenStream] = useState(null)
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
 
-  useEffect(() => { fetchStickers() }, [tab])
-  useEffect(() => { loadLayout() }, [])
-  useEffect(() => { loadSettings() }, [])
   useEffect(() => {
-    (async () => {
+    fetchStickers()
+  }, [tab])
+  useEffect(() => {
+    loadLayout()
+  }, [])
+  useEffect(() => {
+    loadSettings()
+  }, [])
+  useEffect(() => {
+    ;(async () => {
       // 1· Get screen size (unchanged)
       if (window.electron?.getScreenInfo) {
-        const { width, height } = await window.electron.getScreenInfo();
-        setScreenSize({ width, height });
+        const { width, height } = await window.electron.getScreenInfo()
+        setScreenSize({ width, height })
       }
 
       // 2· Ask preload for the primary screen's source-ID
       if (window.electron?.getPrimaryScreenSourceId) {
-        const sourceId = await window.electron.getPrimaryScreenSourceId();
+        const sourceId = await window.electron.getPrimaryScreenSourceId()
 
         // 3· Create a real MediaStream *in the renderer*
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -79,75 +96,73 @@ function App() {
               maxHeight: 9999
             }
           }
-        });
-        setScreenStream(stream);      // ← now a genuine MediaStream
+        })
+        setScreenStream(stream) // ← now a genuine MediaStream
       }
-    })();
-  }, []);
+    })()
+  }, [])
   useEffect(() => {
     // Set dark mode class on root for shadcn/tailwind
-    document.documentElement.classList.toggle('dark', settings.theme === 'dark');
-  }, [settings.theme]);
+    document.documentElement.classList.toggle('dark', settings.theme === 'dark')
+  }, [settings.theme])
 
-  const previewScale = 0.25;
-  const previewWidth = Math.round(screenSize.width * previewScale);
-  const previewHeight = Math.round(screenSize.height * previewScale);
+  const previewScale = 0.25
+  const previewWidth = Math.round(screenSize.width * previewScale)
+  const previewHeight = Math.round(screenSize.height * previewScale)
 
   const initDrawingIfReady = useCallback(() => {
     // Make sure everything is ready
-    if (!screenStream || !videoRef.current || !canvasRef.current) return;
+    if (!screenStream || !videoRef.current || !canvasRef.current) return
 
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
 
     // Keep canvas in sync with preview dimensions
-    canvas.width = previewWidth;
-    canvas.height = previewHeight;
+    canvas.width = previewWidth
+    canvas.height = previewHeight
 
     // Attach stream only once
     if (!video.srcObject) {
-      video.srcObject = screenStream;
-      video.muted = true;
-      video.playsInline = true;       // avoids autoplay block :contentReference[oaicite:1]{index=1}
+      video.srcObject = screenStream
+      video.muted = true
+      video.playsInline = true // avoids autoplay block :contentReference[oaicite:1]{index=1}
     }
 
     // Start drawing after metadata is ready
     const start = () => {
-      video.play().catch(console.error);   // handle promise   :contentReference[oaicite:2]{index=2}
+      video.play().catch(console.error) // handle promise   :contentReference[oaicite:2]{index=2}
       const render = () => {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // canvas API :contentReference[oaicite:3]{index=3}
-        requestAnimationFrame(render);     // 60 fps & efficient :contentReference[oaicite:4]{index=4}
-      };
-      requestAnimationFrame(render);
-    };
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height) // canvas API :contentReference[oaicite:3]{index=3}
+        requestAnimationFrame(render) // 60 fps & efficient :contentReference[oaicite:4]{index=4}
+      }
+      requestAnimationFrame(render)
+    }
 
-    video.addEventListener('loadedmetadata', start, { once: true }); // fire when size known :contentReference[oaicite:5]{index=5}
-  }, [screenStream, previewWidth, previewHeight]);
-
+    video.addEventListener('loadedmetadata', start, { once: true }) // fire when size known :contentReference[oaicite:5]{index=5}
+  }, [screenStream, previewWidth, previewHeight])
 
   const handleVideoRef = useCallback(
     (node) => {
       if (node) {
-        console.log('Video node is ready');
-        videoRef.current = node;
-        initDrawingIfReady();
+        console.log('Video node is ready')
+        videoRef.current = node
+        initDrawingIfReady()
       }
     },
     [screenStream, previewWidth, previewHeight]
-  );
+  )
 
   const handleCanvasRef = useCallback(
     (node) => {
       if (node) {
-        console.log('Canvas node is ready');
-        canvasRef.current = node;
-        initDrawingIfReady();
+        console.log('Canvas node is ready')
+        canvasRef.current = node
+        initDrawingIfReady()
       }
     },
     [screenStream, previewWidth, previewHeight]
-  );
-
+  )
 
   const showToast = (msg) => {
     setToast(msg)
@@ -157,14 +172,15 @@ function App() {
 
   const fetchStickers = async () => {
     const files = await window.electron.ipcRenderer.invoke('list-stickers')
-    files.forEach(sticker => console.log('Sticker path:', sticker.path))
+    files.forEach((sticker) => console.log('Sticker path:', sticker.path))
     setStickers(files)
   }
   const saveSticker = async (buffer, ext = 'png') => {
     const name = `sticker_${Date.now()}.${ext}`
     const filePath = await window.electron.ipcRenderer.invoke('save-sticker', { name, buffer })
     console.log('Sticker saved at:', filePath)
-    fetchStickers(); showToast('Sticker imported!')
+    fetchStickers()
+    showToast('Sticker imported!')
   }
 
   // Layout persistence
@@ -198,29 +214,40 @@ function App() {
     setResults([])
     const { data: giphyData } = await gf.search(search, { limit: 5 })
     const unsplashRes = await unsplash.search.getPhotos({ query: search, perPage: 5 })
-    const giphyResults = giphyData.map(gif => ({ type: 'gif', url: gif.images.original.url, thumb: gif.images.fixed_width_small.url }))
-    const unsplashResults = (unsplashRes.response?.results || []).map(img => ({ type: 'img', url: img.urls.raw, thumb: img.urls.thumb }))
+    const giphyResults = giphyData.map((gif) => ({
+      type: 'gif',
+      url: gif.images.original.url,
+      thumb: gif.images.fixed_width_small.url
+    }))
+    const unsplashResults = (unsplashRes.response?.results || []).map((img) => ({
+      type: 'img',
+      url: img.urls.raw,
+      thumb: img.urls.thumb
+    }))
     setResults([...giphyResults, ...unsplashResults])
     setLoading(false)
   }
 
   const handleImportUrl = async () => {
     if (!importUrl || !importUrl.trim()) {
-      showToast('Please enter a valid image URL.');
-      return;
+      showToast('Please enter a valid image URL.')
+      return
     }
-    setLoading(true);
+    setLoading(true)
     try {
-      const filePath = await window.electron.ipcRenderer.invoke('import-sticker-url', importUrl.trim());
+      const filePath = await window.electron.ipcRenderer.invoke(
+        'import-sticker-url',
+        importUrl.trim()
+      )
       if (filePath) {
-        fetchStickers();
-        showToast('Sticker imported!');
-        setImportUrl('');
+        fetchStickers()
+        showToast('Sticker imported!')
+        setImportUrl('')
       }
     } catch (e) {
-      showToast(e?.message || 'Import failed!');
+      showToast(e?.message || 'Import failed!')
     }
-    setLoading(false);
+    setLoading(false)
   }
 
   const handleImportLocal = (e) => {
@@ -255,28 +282,36 @@ function App() {
       const arrayBuffer = await blob.arrayBuffer()
       const ext = blob.type.split('/')[1] || 'png'
       await saveSticker(arrayBuffer, ext)
-    } catch (e) { showToast('Import failed!') }
+    } catch (e) {
+      showToast('Import failed!')
+    }
     setLoading(false)
   }
 
   const handleRemoveBg = async (sticker) => {
     setLoading(true)
     try {
-
       const response = await fetch(toFileUrl(sticker.path))
       const blob = await response.blob()
       const file = new File([blob], sticker.name)
       const result = await imglyRemoveBackground.default(file)
       const resultBuffer = await result.arrayBuffer()
-      await window.electron.ipcRenderer.invoke('save-sticker', { name: sticker.name, buffer: resultBuffer })
-      fetchStickers(); showToast('Background removed!')
-    } catch (e) { showToast('Background removal failed!') }
+      await window.electron.ipcRenderer.invoke('save-sticker', {
+        name: sticker.name,
+        buffer: resultBuffer
+      })
+      fetchStickers()
+      showToast('Background removed!')
+    } catch (e) {
+      showToast('Background removal failed!')
+    }
     setLoading(false)
   }
   // Delete sticker
   const handleDelete = async (sticker) => {
     await window.electron.ipcRenderer.invoke('delete-sticker', sticker.name)
-    fetchStickers(); showToast('Sticker deleted!')
+    fetchStickers()
+    showToast('Sticker deleted!')
     // If the deleted sticker was the active one, clear the active sticker and layout
     if (activeSticker && activeSticker.name === sticker.name) {
       setActiveSticker(null)
@@ -305,8 +340,14 @@ function App() {
   // Rename sticker
   const handleRename = async (sticker) => {
     if (!renameValue) return
-    await window.electron.ipcRenderer.invoke('rename-sticker', { oldName: sticker.name, newName: renameValue })
-    setRenameId(null); setRenameValue(''); fetchStickers(); showToast('Sticker renamed!')
+    await window.electron.ipcRenderer.invoke('rename-sticker', {
+      oldName: sticker.name,
+      newName: renameValue
+    })
+    setRenameId(null)
+    setRenameValue('')
+    fetchStickers()
+    showToast('Sticker renamed!')
   }
   // Layout drag/resize
   const handleLayoutChange = (x, y, width, height) => {
@@ -317,16 +358,16 @@ function App() {
       widthPct: width / previewWidth,
       heightPct: height / previewHeight,
       sticker: activeSticker
-    };
-    setLayout(newLayout);
-    saveLayout(newLayout);
+    }
+    setLayout(newLayout)
+    saveLayout(newLayout)
     if (window.electron?.ipcRenderer) {
       window.electron.ipcRenderer.send('update-sticker-layout', {
         ...newLayout,
         stickerUrl: newLayout.sticker ? toFileUrl(newLayout.sticker.path) : undefined
-      });
+      })
     }
-  };
+  }
   // Settings
   const handleSettingsChange = async (field, value) => {
     const newSettings = { ...settings, [field]: value }
@@ -334,7 +375,6 @@ function App() {
     saveSettings(newSettings)
     if (field === 'startup') await window.electron.ipcRenderer.invoke('set-auto-launch', value)
   }
-
 
   return (
     <div className="min-h-screen w-full p-6 bg-background text-foreground grid grid-cols-1 relative overflow-hidden">
@@ -344,7 +384,9 @@ function App() {
         <Tabs value={tab} onValueChange={setTab} className="mb-6">
           <TabsList>
             {TABS.map((t) => (
-              <TabsTrigger key={t} value={t}>{t}</TabsTrigger>
+              <TabsTrigger key={t} value={t}>
+                {t}
+              </TabsTrigger>
             ))}
           </TabsList>
           <TabsContent value="Search">
@@ -356,7 +398,8 @@ function App() {
                   <div className="w-full border border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center p-6">
                     <ArrowDownToLine className="w-10 h-10 text-purple-500 mb-2" />
                     <Label htmlFor="local-file" className="cursor-pointer">
-                      Choose file... <span className="text-sm text-muted-foreground">or Drag n Drop</span>
+                      Choose file...{' '}
+                      <span className="text-sm text-muted-foreground">or Drag n Drop</span>
                     </Label>
                     <Input
                       id="local-file"
@@ -366,9 +409,7 @@ function App() {
                       className="hidden"
                     />
                   </div>
-                  <Button onClick={handleImportLocalButton}>
-                    Import
-                  </Button>
+                  <Button onClick={handleImportLocalButton}>Import</Button>
                 </Card>
 
                 {/* URL Import Box */}
@@ -409,11 +450,7 @@ function App() {
                         alt="result"
                         className="w-24 h-24 object-cover rounded-md"
                       />
-                      <Button
-                        onClick={() => handleImport(item)}
-                        size="sm"
-                        className="mt-2 w-full"
-                      >
+                      <Button onClick={() => handleImport(item)} size="sm" className="mt-2 w-full">
                         Import
                       </Button>
                     </Card>
@@ -421,34 +458,97 @@ function App() {
                 </div>
               </div>
             </TabsContent>
-
           </TabsContent>
           <TabsContent value="Layout">
             <div className="flex gap-4 flex-wrap mb-8">
               {stickers.length === 0 && <div>No stickers yet.</div>}
               {stickers.map((sticker, i) => (
                 <div key={i} className="bg-muted p-2 rounded-lg flex flex-col items-center">
-                  <img src={toFileUrl(sticker.path)} alt="sticker" className="w-24 h-24 rounded-lg mb-2" />
+                  <img
+                    src={toFileUrl(sticker.path)}
+                    alt="sticker"
+                    className="w-24 h-24 rounded-lg mb-2"
+                  />
                   {renameId === sticker.name ? (
                     <div className="flex gap-1">
-                      <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} className="w-20" />
-                      <Button size="sm" className="h-6 px-2 text-xs bg-primary" onClick={() => handleRename(sticker)}>Save</Button>
-                      <Button size="sm" className="h-6 px-2 text-xs bg-destructive" onClick={() => { setRenameId(null); setRenameValue('') }}>Cancel</Button>
+                      <Input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        className="w-20"
+                      />
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-primary"
+                        onClick={() => handleRename(sticker)}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-destructive"
+                        onClick={() => {
+                          setRenameId(null)
+                          setRenameValue('')
+                        }}
+                      >
+                        Cancel
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                      <Button size="sm" className="h-6 px-2 text-xs bg-primary" onClick={() => handleSetSticker(sticker)}>Set</Button>
-                      <Button size="sm" className="h-6 px-2 text-xs bg-green-600" onClick={() => handleRemoveBg(sticker)}>Remove BG</Button>
-                      <Button size="sm" className="h-6 px-2 text-xs bg-destructive" onClick={() => handleDelete(sticker)}>Delete</Button>
-                      <Button size="sm" className="h-6 px-2 text-xs bg-orange-500" onClick={() => { setRenameId(sticker.name); setRenameValue(sticker.name) }}>Rename</Button>
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-primary"
+                        onClick={() => handleSetSticker(sticker)}
+                      >
+                        Set
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-green-600"
+                        onClick={() => handleRemoveBg(sticker)}
+                      >
+                        Remove BG
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-destructive"
+                        onClick={() => handleDelete(sticker)}
+                      >
+                        Delete
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-orange-500"
+                        onClick={() => {
+                          setRenameId(sticker.name)
+                          setRenameValue(sticker.name)
+                        }}
+                      >
+                        Rename
+                      </Button>
                     </div>
                   )}
                 </div>
               ))}
             </div>
             {activeSticker && (
-              <div className="relative mx-auto" style={{ width: previewWidth, height: previewHeight, background: '#111', borderRadius: 2, overflow: 'hidden' }}>
-                <canvas ref={handleCanvasRef} width={previewWidth} height={previewHeight} className="absolute top-0 left-0 w-full h-full z-0" />
+              <div
+                className="relative mx-auto"
+                style={{
+                  width: previewWidth,
+                  height: previewHeight,
+                  background: '#111',
+                  borderRadius: 2,
+                  overflow: 'hidden'
+                }}
+              >
+                <canvas
+                  ref={handleCanvasRef}
+                  width={previewWidth}
+                  height={previewHeight}
+                  className="absolute top-0 left-0 w-full h-full z-0"
+                />
                 <video ref={handleVideoRef} />
                 <Rnd
                   size={{
@@ -459,12 +559,30 @@ function App() {
                     x: layout.xPct ? layout.xPct * previewWidth : layout.x,
                     y: layout.yPct ? layout.yPct * previewHeight : layout.y
                   }}
-                  onDragStop={(e, d) => handleLayoutChange(d.x, d.y, layout.widthPct ? layout.widthPct * previewWidth : layout.width, layout.heightPct ? layout.heightPct * previewHeight : layout.height)}
-                  onResizeStop={(e, dir, ref, delta, pos) => handleLayoutChange(pos.x, pos.y, parseInt(ref.style.width), parseInt(ref.style.height))}
+                  onDragStop={(e, d) =>
+                    handleLayoutChange(
+                      d.x,
+                      d.y,
+                      layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                      layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                    )
+                  }
+                  onResizeStop={(e, dir, ref, delta, pos) =>
+                    handleLayoutChange(
+                      pos.x,
+                      pos.y,
+                      parseInt(ref.style.width),
+                      parseInt(ref.style.height)
+                    )
+                  }
                   bounds="parent"
                   style={{ zIndex: 1 }}
                 >
-                  <img src={toFileUrl(activeSticker.path)} alt="active" className="w-full h-full z-1" />
+                  <img
+                    src={toFileUrl(activeSticker.path)}
+                    alt="active"
+                    className="w-full h-full z-1"
+                  />
                 </Rnd>
               </div>
             )}
@@ -472,20 +590,41 @@ function App() {
           <TabsContent value="Settings">
             <div className="max-w-sm flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <Input type="checkbox" checked={settings.alwaysOnTop} onChange={e => handleSettingsChange('alwaysOnTop', e.target.checked)} className="w-4 h-4" />
+                <Input
+                  type="checkbox"
+                  checked={settings.alwaysOnTop}
+                  onChange={(e) => handleSettingsChange('alwaysOnTop', e.target.checked)}
+                  className="w-4 h-4"
+                />
                 <span>Always on top</span>
               </div>
               <div className="flex items-center gap-3">
-                <Input type="checkbox" checked={autoLaunch} onChange={e => { setAutoLaunch(e.target.checked); handleSettingsChange('startup', e.target.checked) }} className="w-4 h-4" />
+                <Input
+                  type="checkbox"
+                  checked={autoLaunch}
+                  onChange={(e) => {
+                    setAutoLaunch(e.target.checked)
+                    handleSettingsChange('startup', e.target.checked)
+                  }}
+                  className="w-4 h-4"
+                />
                 <span>Start on system startup</span>
               </div>
               <div className="flex items-center gap-3">
-                <Input type="checkbox" checked={settings.hideStickerCapture} onChange={e => handleSettingsChange('hideStickerCapture', e.target.checked)} className="w-4 h-4" />
+                <Input
+                  type="checkbox"
+                  checked={settings.hideStickerCapture}
+                  onChange={(e) => handleSettingsChange('hideStickerCapture', e.target.checked)}
+                  className="w-4 h-4"
+                />
                 <span>Hide sticker capture</span>
               </div>
               <div className="flex items-center gap-3">
                 <label>Theme: </label>
-                <Select value={settings.theme} onValueChange={v => handleSettingsChange('theme', v)}>
+                <Select
+                  value={settings.theme}
+                  onValueChange={(v) => handleSettingsChange('theme', v)}
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -498,7 +637,11 @@ function App() {
             </div>
           </TabsContent>
         </Tabs>
-        {toast && <div className="fixed top-12 right-6 bg-muted text-foreground px-6 py-3 rounded-lg z-50 shadow-lg">{toast}</div>}
+        {toast && (
+          <div className="fixed top-12 right-6 bg-muted text-foreground px-6 py-3 rounded-lg z-50 shadow-lg">
+            {toast}
+          </div>
+        )}
       </div>
     </div>
   )
