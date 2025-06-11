@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -23,25 +23,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+        name: Install dependencies
 
-      - name: Lint
-        run: npm run lint
+      - run: npm run lint
+        name: Lint
 
-      - name: Build (vite)
-        run: npm run build
+      - run: npm run build
+        name: Build (vite)
 
       - name: Package app
-        uses: electron-builder/action@v1
+        uses: samuelmeuli/action-electron-builder@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           args: --${{ startsWith(matrix.os, 'ubuntu') && 'linux' || (startsWith(matrix.os, 'windows') && 'win' || 'mac') }}
 
-      - name: Upload packaged artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: vibelayer-${{ matrix.os }}
           path: dist/**/*
