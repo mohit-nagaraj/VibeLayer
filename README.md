@@ -1,6 +1,6 @@
-# ✨ VibeLayer: Your Adorable Desktop Companion! 🐾
+# ✨ VibeLayer: Your Adorable Desktop Companion! 🐾 ![Build Status](https://img.shields.io/github/actions/workflow/status/mohit-nagaraj/VibeLayer/build.yml)
 
-> **Let your desktop vibe with you!**
+> **Let your desktop vibe with you!** 
 
 ![preview](https://github.com/user-attachments/assets/ce5bb19f-8848-4b9e-9134-ac4d8463cefd)
 
