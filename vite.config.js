@@ -17,6 +17,14 @@ export default defineConfig({
         '@': resolve('src/renderer/src')
       }
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'src/renderer/index.html'),
+          sticker: resolve(__dirname, 'src/renderer/sticker.html')
+        }
+      }
+    }
   }
 })
