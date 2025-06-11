@@ -1,10 +1,10 @@
 {
   "name": "vibelayer",
   "version": "1.0.0",
-  "description": "An Electron application with React",
+  "description": "Your adorable desktop companion which sits along with you on your screen",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Mohit Nagaraj",
+  "homepage": "https://vibe.mohitnagaraj.in",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -59,7 +59,7 @@
   },
   "build": {
     "productName": "VibeLayer",
-    "appId": "com.mohitnagaraj.vibelayer",
+    "appId": "in.mohitnagaraj.vibe",
     "directories": {
       "buildResources": "resources"
     },

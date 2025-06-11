@@ -50,8 +50,8 @@ function createWindows() {
     width: 900,
     height: 670,
     frame: false,
-    x: 10,
-    y: 10,
+    x: 30,
+    y: 50,
     show: false,
     autoHideMenuBar: true,
     icon: iconPath,
@@ -66,7 +66,7 @@ function createWindows() {
   managerWindow.on('ready-to-show', () => {
     managerWindow.show();
   });
-  managerWindow.setContentProtection(true);
+  // managerWindow.setContentProtection(true);
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     stickerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/sticker.html');
@@ -225,6 +225,7 @@ ipcMain.handle('window-close', () => {
 ipcMain.handle('set-sticker-content-protection', (_, value) => {
   if (stickerWindowRef && !stickerWindowRef.isDestroyed()) {
     stickerWindowRef.setContentProtection(!!value);
+    console.log('Set sticker content protection to:', !!value);
     return true;
   }
   return false;

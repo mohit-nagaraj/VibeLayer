@@ -9,6 +9,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import { DotPattern } from '../../components/magicui/dot-pattern'
 import CustomTitleBar from './components/CustomTitleBar'
+import { ArrowDownToLine, Globe, SearchIcon } from 'lucide-react'
+import { Label } from "./components/ui/label"
+import { Card } from './components/ui/card'
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/');
@@ -58,11 +61,11 @@ function App() {
         const { width, height } = await window.electron.getScreenInfo();
         setScreenSize({ width, height });
       }
-  
+
       // 2· Ask preload for the primary screen's source-ID
       if (window.electron?.getPrimaryScreenSourceId) {
         const sourceId = await window.electron.getPrimaryScreenSourceId();
-  
+
         // 3· Create a real MediaStream *in the renderer*
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
@@ -81,11 +84,11 @@ function App() {
       }
     })();
   }, []);
-  useEffect(() => { 
+  useEffect(() => {
     // Set dark mode class on root for shadcn/tailwind
     document.documentElement.classList.toggle('dark', settings.theme === 'dark');
   }, [settings.theme]);
-  
+
   const previewScale = 0.25;
   const previewWidth = Math.round(screenSize.width * previewScale);
   const previewHeight = Math.round(screenSize.height * previewScale);
@@ -93,22 +96,22 @@ function App() {
   const initDrawingIfReady = useCallback(() => {
     // Make sure everything is ready
     if (!screenStream || !videoRef.current || !canvasRef.current) return;
-  
-    const video  = videoRef.current;
+
+    const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx    = canvas.getContext('2d');
-  
+    const ctx = canvas.getContext('2d');
+
     // Keep canvas in sync with preview dimensions
-    canvas.width  = previewWidth;
+    canvas.width = previewWidth;
     canvas.height = previewHeight;
-  
+
     // Attach stream only once
     if (!video.srcObject) {
-      video.srcObject   = screenStream;
-      video.muted       = true;
+      video.srcObject = screenStream;
+      video.muted = true;
       video.playsInline = true;       // avoids autoplay block :contentReference[oaicite:1]{index=1}
     }
-  
+
     // Start drawing after metadata is ready
     const start = () => {
       video.play().catch(console.error);   // handle promise   :contentReference[oaicite:2]{index=2}
@@ -118,10 +121,10 @@ function App() {
       };
       requestAnimationFrame(render);
     };
-  
+
     video.addEventListener('loadedmetadata', start, { once: true }); // fire when size known :contentReference[oaicite:5]{index=5}
   }, [screenStream, previewWidth, previewHeight]);
-  
+
 
   const handleVideoRef = useCallback(
     (node) => {
@@ -134,11 +137,11 @@ function App() {
     [screenStream, previewWidth, previewHeight]
   );
 
-  const handleCanvasRef = useCallback( 
+  const handleCanvasRef = useCallback(
     (node) => {
       if (node) {
         console.log('Canvas node is ready');
-        canvasRef.current = node; 
+        canvasRef.current = node;
         initDrawingIfReady();
       }
     },
@@ -231,7 +234,10 @@ function App() {
   }
 
   const handleImportLocalButton = async () => {
-    if (!localFile) return
+    if (!localFile) {
+      showToast('Please select a file first.')
+      return
+    }
     setLoading(true)
     const arrayBuffer = await localFile.arrayBuffer()
     const ext = localFile.name.split('.').pop()
@@ -329,14 +335,11 @@ function App() {
     if (field === 'startup') await window.electron.ipcRenderer.invoke('set-auto-launch', value)
   }
 
-  console.log('screenStream:', screenStream);
-console.log('Constructor name:', screenStream?.constructor?.name);
-
 
   return (
     <div className="min-h-screen w-full p-6 bg-background text-foreground grid grid-cols-1 relative overflow-hidden">
       <CustomTitleBar title="VibeLayer" theme={settings.theme} />
-      <DotPattern className="opacity-40 z-0 w-full h-full" />
+      <DotPattern className="[mask-image:radial-gradient(300px_circle_at_center,white,transparent)]" />
       <div className="relative z-10 pt-10">
         <Tabs value={tab} onValueChange={setTab} className="mb-6">
           <TabsList>
@@ -345,45 +348,80 @@ console.log('Constructor name:', screenStream?.constructor?.name);
             ))}
           </TabsList>
           <TabsContent value="Search">
-            <div className="flex items-center mb-4">
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for stickers or GIFs..." className="w-72 mr-2" />
-              <Button onClick={handleSearch} disabled={loading}>Search</Button>
-            </div>
-            {loading && <div className="mt-4">Loading...</div>}
-            <div className="mt-6">
-              <div className="flex gap-4 flex-wrap">
-                {results.map((item, i) => (
-                  <div key={i} className="bg-muted p-2 rounded-lg">
-                    <img src={item.thumb} alt="result" className="w-24 h-24 rounded-lg" />
-                    <Button onClick={() => handleImport(item)} className="mt-2 w-full">Import</Button>
+            <TabsContent value="Search">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {/* Local File Upload Box */}
+                <Card className="p-4 flex flex-col items-center justify-between gap-4">
+                  <div className="w-full text-left font-semibold">Local File</div>
+                  <div className="w-full border border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center p-6">
+                    <ArrowDownToLine className="w-10 h-10 text-purple-500 mb-2" />
+                    <Label htmlFor="local-file" className="cursor-pointer">
+                      Choose file... <span className="text-sm text-muted-foreground">or Drag n Drop</span>
+                    </Label>
+                    <Input
+                      id="local-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImportLocal}
+                      className="hidden"
+                    />
                   </div>
-                ))}
+                  <Button onClick={handleImportLocalButton}>
+                    Import
+                  </Button>
+                </Card>
+
+                {/* URL Import Box */}
+                <Card className="p-4 flex flex-col items-center justify-between gap-4">
+                  <div className="w-full text-left font-semibold">URL/ Direct Link</div>
+                  <Input
+                    value={importUrl}
+                    onChange={(e) => setImportUrl(e.target.value)}
+                    placeholder="https://..."
+                  />
+                  <Globe className="w-10 h-10 text-purple-500" />
+                  <Button onClick={handleImportUrl}>Import</Button>
+                </Card>
               </div>
-              {!search && (
-                <div className="mt-8">
-                  <div>Import from URL:</div>
-                  <div className="flex items-center mt-2">
-                    <Input value={importUrl} onChange={e => setImportUrl(e.target.value)} placeholder="Paste image URL..." className="w-72 mr-2" />
-                    <Button onClick={handleImportUrl}>Import</Button>
-                  </div>
-                  <div className="mt-4">
-                    <div>Import from local file:</div>
-                    <Input type="file" accept="image/*" onChange={handleImportLocal} className="mt-2" />
-                    {localFile && (
-                      <div className="mt-2 flex items-center">
-                        <span>{localFile.name}</span>
-                        <Button onClick={handleImportLocalButton} className="ml-2">Import</Button>
-                        {localPreview && (
-                          <div className="mt-2">
-                            <img src={localPreview} alt="preview" className="w-24 h-24 rounded-lg" />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+
+              {/* Online Search */}
+              <div className="mt-10">
+                <div className="text-lg font-semibold mb-2">Search online</div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Start typing keywords..."
+                  />
+                  <Button onClick={handleSearch} disabled={loading}>
+                    <SearchIcon className="w-4 h-4" />
+                  </Button>
                 </div>
-              )}
-            </div>
+
+                {loading && <div>Loading...</div>}
+
+                {/* Search Results */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                  {results.map((item, i) => (
+                    <Card key={i} className="p-2 flex flex-col items-center">
+                      <img
+                        src={item.thumb}
+                        alt="result"
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                      <Button
+                        onClick={() => handleImport(item)}
+                        size="sm"
+                        className="mt-2 w-full"
+                      >
+                        Import
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
           </TabsContent>
           <TabsContent value="Layout">
             <div className="flex gap-4 flex-wrap mb-8">
@@ -460,7 +498,7 @@ console.log('Constructor name:', screenStream?.constructor?.name);
             </div>
           </TabsContent>
         </Tabs>
-        {toast && <div className="fixed top-6 right-6 bg-muted text-foreground px-6 py-3 rounded-lg z-50 shadow-lg">{toast}</div>}
+        {toast && <div className="fixed top-12 right-6 bg-muted text-foreground px-6 py-3 rounded-lg z-50 shadow-lg">{toast}</div>}
       </div>
     </div>
   )
