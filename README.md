@@ -1,6 +1,8 @@
-# ✨ VibeLayer: Your Adorable Desktop Companion! 🐾
+# ✨ VibeLayer: Your Adorable Desktop Companion! 🐾 ![Build Status](https://img.shields.io/github/actions/workflow/status/mohit-nagaraj/VibeLayer/build.yml)
 
-> **Let your desktop vibe with you!**
+> **Let your desktop vibe with you!** 
+
+![preview](https://github.com/user-attachments/assets/ce5bb19f-8848-4b9e-9134-ac4d8463cefd)
 
 VibeLayer is not just another app—it's your _adorable_, always-on-top, see-through sticker buddy! Overlay cute, quirky, or motivational stickers (with transparent backgrounds!) right on your desktop. Make your workspace fun, personal, and a little bit magical. ✨
 
@@ -24,13 +26,10 @@ VibeLayer is not just another app—it's your _adorable_, always-on-top, see-thr
 - **🔒 Privacy First:** Stickers and settings are stored _locally_. No cloud, no snooping.
 - **💻 Cross-Platform:** Windows, macOS, Linux—everyone gets to vibe!
 
----
 
 ## 🖼️ Screenshots
 
-_(Insert some cute screenshots or GIFs of stickers floating on your desktop!)_
-
----
+*Yet to come*
 
 ## 🚀 Getting Started
 
@@ -61,8 +60,6 @@ yarn build:mac
 yarn build:linux
 ```
 
----
-
 ## 🦊 How to Use Your New Desktop Buddy
 
 ### 1. **Import Stickers**
@@ -89,8 +86,6 @@ yarn build:linux
 - **Hide Sticker Capture:** For when you want your stickers to be _extra_ private.
 - **Theme:** Dark or light—pick your vibe.
 
----
-
 ## 🛠️ Tech Stack (a.k.a. The Secret Sauce)
 
 - **Electron**: Desktop wizardry
@@ -101,8 +96,6 @@ yarn build:linux
 - **Imgly Background Removal**: AI magic for transparency
 - **Electron Store**: Remembers your stickers and settings
 - **Auto-launch**: For the always-there vibe
-
----
 
 ## 🧙‍♂️ Configuration & Environment
 
@@ -118,12 +111,6 @@ yarn build:linux
 1. Fork the repo and create your branch.
 2. Run `npm install` and `npm run dev`.
 3. Submit a pull request with a fun description!
-
----
-
-## 📜 License
-
-_(Add your license here, e.g., MIT, GPL, etc.)_
 
 ---
 
