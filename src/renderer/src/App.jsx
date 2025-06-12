@@ -61,7 +61,8 @@ function App() {
   const [screenStream, setScreenStream] = useState(null)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
-  const importUrlRef = useRef();
+  const [importUrl, setImportUrl] = useState('')
+  const [imgError, setImgError] = useState(false)
   const searchRef = useRef();
 
   useEffect(() => {
@@ -230,8 +231,8 @@ function App() {
     setLoading(false)
   }
 
-  const handleImportUrl = async (url) => {
-    if (!url || !url.trim()) {
+  const handleImportUrl = async () => {
+    if (!importUrl || !importUrl.trim()) {
       showToast('Please enter a valid image URL.')
       return
     }
@@ -239,12 +240,12 @@ function App() {
     try {
       const filePath = await window.electron.ipcRenderer.invoke(
         'import-sticker-url',
-        url.trim()
+        importUrl.trim()
       )
       if (filePath) {
         fetchStickers()
         showToast('Sticker imported!')
-        if (importUrlRef.current) importUrlRef.current.value = ''
+        setImportUrl('')
       }
     } catch (e) {
       showToast(e?.message || 'Import failed!')
@@ -401,7 +402,7 @@ function App() {
                   {loading && localFile ? (
                     <div className="text-sm text-muted-foreground">Loading...</div>
                   ) : (
-                    <Button size={"sm"} className={"ml-auto"} onClick={handleImportLocalButton}>Import</Button>
+                    <Button size={"sm"} className={"ml-auto cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>
                   )}
                   </div>
                   <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
@@ -431,22 +432,27 @@ function App() {
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
                 <div className="flex w-full items-center justify-between gap-2">
                   <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                  <Button className={"ml-auto"} size={"sm"} onClick={() => handleImportUrl(importUrlRef.current.value)}>Import</Button>
+                  <Button className={"ml-auto cursor-pointer"} size={"sm"} onClick={handleImportUrl}>Import</Button>
 
                 </div>
                 <div className="w-full min-h-48 flex flex-col items-center">
 
                   <Input
-                    ref={importUrlRef}
+                    value={importUrl}
+                    onChange={e => {
+                      setImportUrl(e.target.value)
+                      setImgError(false)
+                    }}
                     placeholder="https://..."
                   />
-                      <img
-                        src={importUrlRef.current && importUrlRef.current.value !== '' ? importUrlRef.current.value : internetImg}
-                        alt="internet"
-                        className="w-24 h-24 object-cover rounded-md"
-                        style={{marginTop: '30px'}}
-                      />
-                    </div>
+                  <img
+                    src={importUrl && !imgError ? importUrl : internetImg}
+                    alt="internet"
+                    className="w-24 h-24 object-cover rounded-md"
+                    style={{marginTop: '30px'}}
+                    onError={() => setImgError(true)}
+                  />
+                </div>
                 </Card>
               </div>
 
@@ -460,7 +466,7 @@ function App() {
                     placeholder="Start typing keywords..."
                     className="backdrop-blur-xs"
                   />
-                  <Button onClick={() => handleSearch(searchRef.current.value)} disabled={loading}>
+                  <Button className={"cursor-pointer"} onClick={() => handleSearch(searchRef.current.value)} disabled={loading}>
                     <SearchIcon className="w-4 h-4" />
                   </Button>
                 </div>
