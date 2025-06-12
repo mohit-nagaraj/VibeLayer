@@ -39,10 +39,8 @@ const TABS = ['Search', 'Layout', 'Settings']
 
 function App() {
   const [tab, setTab] = useState('Search')
-  const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [stickers, setStickers] = useState([])
-  const [importUrl, setImportUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [layout, setLayout] = useState({ x: 100, y: 100, width: 200, height: 200, sticker: null })
   const [activeSticker, setActiveSticker] = useState(null)
@@ -63,6 +61,8 @@ function App() {
   const [screenStream, setScreenStream] = useState(null)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
+  const importUrlRef = useRef();
+  const searchRef = useRef();
 
   useEffect(() => {
     fetchStickers()
@@ -211,11 +211,11 @@ function App() {
     }
   }
 
-  const handleSearch = async () => {
+  const handleSearch = async (searchTerm) => {
     setLoading(true)
     setResults([])
-    const { data: giphyData } = await gf.search(search, { limit: 5 })
-    const unsplashRes = await unsplash.search.getPhotos({ query: search, perPage: 5 })
+    const { data: giphyData } = await gf.search(searchTerm, { limit: 5 })
+    const unsplashRes = await unsplash.search.getPhotos({ query: searchTerm, perPage: 5 })
     const giphyResults = giphyData.map((gif) => ({
       type: 'gif',
       url: gif.images.original.url,
@@ -230,8 +230,8 @@ function App() {
     setLoading(false)
   }
 
-  const handleImportUrl = async () => {
-    if (!importUrl || !importUrl.trim()) {
+  const handleImportUrl = async (url) => {
+    if (!url || !url.trim()) {
       showToast('Please enter a valid image URL.')
       return
     }
@@ -239,12 +239,12 @@ function App() {
     try {
       const filePath = await window.electron.ipcRenderer.invoke(
         'import-sticker-url',
-        importUrl.trim()
+        url.trim()
       )
       if (filePath) {
         fetchStickers()
         showToast('Sticker imported!')
-        setImportUrl('')
+        if (importUrlRef.current) importUrlRef.current.value = ''
       }
     } catch (e) {
       showToast(e?.message || 'Import failed!')
@@ -431,18 +431,17 @@ function App() {
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
                 <div className="flex w-full items-center justify-between gap-2">
                   <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                  <Button className={"ml-auto"} size={"sm"} onClick={handleImportUrl}>Import</Button>
+                  <Button className={"ml-auto"} size={"sm"} onClick={() => handleImportUrl(importUrlRef.current.value)}>Import</Button>
 
                 </div>
                 <div className="w-full min-h-48 flex flex-col items-center">
 
                   <Input
-                    value={importUrl}
-                    onChange={(e) => setImportUrl(e.target.value)}
+                    ref={importUrlRef}
                     placeholder="https://..."
-                    />
+                  />
                       <img
-                        src={importUrl!=""?importUrl:internetImg}
+                        src={importUrlRef.current && importUrlRef.current.value !== '' ? importUrlRef.current.value : internetImg}
                         alt="internet"
                         className="w-24 h-24 object-cover rounded-md"
                         style={{marginTop: '30px'}}
@@ -457,17 +456,16 @@ function App() {
                 <div className="font-semibold mb-2 text-2xl">Search online</div>
                 <div className="flex items-center gap-2 mb-4">
                   <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    ref={searchRef}
                     placeholder="Start typing keywords..."
                     className="backdrop-blur-xs"
                   />
-                  <Button onClick={handleSearch} disabled={loading}>
+                  <Button onClick={() => handleSearch(searchRef.current.value)} disabled={loading}>
                     <SearchIcon className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {loading && search ? <div>Loading...</div> : null}
+                {loading && searchRef.current && searchRef.current.value ? <div>Loading...</div> : null}
 
                 {/* Search Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
