@@ -75,7 +75,7 @@ function App() {
     loadSettings()
   }, [])
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       // 1· Get screen size (unchanged)
       if (window.electron?.getScreenInfo) {
         const { width, height } = await window.electron.getScreenInfo()
@@ -386,12 +386,12 @@ function App() {
                 {/* Local File Upload Box */}
                 <Card className="p-4 flex flex-col items-center justify-between gap-2">
                   <div className="flex w-full items-center justify-between gap-2">
-                  <div className="w-full text-left font-semibold text-2xl">Local File</div>
-                  {loading && localFile ? (
-                    <div className="text-sm text-muted-foreground">Loading...</div>
-                  ) : (
-                    <Button size={"sm"} className={"ml-auto cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>
-                  )}
+                    <div className="w-full text-left font-semibold text-2xl">Local File</div>
+                    {loading && localFile ? (
+                      <div className="text-sm text-muted-foreground">Loading...</div>
+                    ) : (
+                      <Button size={"sm"} className={"ml-auto cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>
+                    )}
                   </div>
                   <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
                     <Label htmlFor="local-file" className="cursor-pointer ">
@@ -405,48 +405,48 @@ function App() {
                       onChange={handleImportLocal}
                       className="hidden"
                     />
-                    
-                      <img
-                        src={localPreview?? downloadImg}
-                        alt="preview"
-                        className="w-24 h-24 object-cover rounded-md mt-4"
-                        style={{marginTop: '3px', marginBottom: '-15px'}}
-                      />
-                    
+
+                    <img
+                      src={localPreview ?? downloadImg}
+                      alt="preview"
+                      className="w-24 h-24 object-cover rounded-md mt-4"
+                      style={{ marginTop: '3px', marginBottom: '-15px' }}
+                    />
+
                   </div>
                 </Card>
 
                 {/* URL Import Box */}
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                  <Button className={"ml-auto cursor-pointer"} size={"sm"} onClick={handleImportUrl}>Import</Button>
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
+                    <Button className={"ml-auto cursor-pointer"} size={"sm"} onClick={handleImportUrl}>Import</Button>
 
-                </div>
-                <div className="w-full min-h-48 flex flex-col items-center">
+                  </div>
+                  <div className="w-full min-h-48 flex flex-col items-center">
 
-                  <Input
-                    value={importUrl}
-                    onChange={e => {
-                      setImportUrl(e.target.value)
-                      setImgError(false)
-                    }}
-                    placeholder="https://..."
-                  />
-                  <img
-                    src={importUrl && !imgError ? importUrl : internetImg}
-                    alt="internet"
-                    className="w-24 h-24 object-cover rounded-md"
-                    style={{marginTop: '30px'}}
-                    onError={() => setImgError(true)}
-                  />
-                </div>
+                    <Input
+                      value={importUrl}
+                      onChange={e => {
+                        setImportUrl(e.target.value)
+                        setImgError(false)
+                      }}
+                      placeholder="https://..."
+                    />
+                    <img
+                      src={importUrl && !imgError ? importUrl : internetImg}
+                      alt="internet"
+                      className="w-24 h-24 object-cover rounded-md"
+                      style={{ marginTop: '30px' }}
+                      onError={() => setImgError(true)}
+                    />
+                  </div>
                 </Card>
               </div>
 
               <div className="my-6" />
 
-              <div className="mt-10" style={{marginTop:"16px"}}>
+              <div className="mt-10" style={{ marginTop: "16px" }}>
                 <div className="font-semibold mb-2 text-2xl">Search online</div>
                 <div className="flex items-center gap-2 mb-4">
                   <Input
@@ -493,17 +493,17 @@ function App() {
                     size="icon"
                     variant="outline"
                     onClick={() => handleDelete(sticker)}
-                    className="absolute top-1 right-1 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute top-1 right-1 bg-transparent opacity-0 group-hover:opacity-100 duration-300 transition-opacity z-10"
                     aria-label="Delete"
                   >
                     <Trash className="w-2 h-2 text-red-500" />
                   </Button>
                   <div
-                    className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-200 group-hover:opacity-0"
+                    className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-400 group-hover:opacity-0"
                   >
                     {`Sticker ${i + 1}`}
                   </div>
-                  <div className="flex gap-2 absolute bottom-[6px] opacity-0 group-hover:opacity-100">
+                  <div className="flex gap-2 absolute bottom-[6px] opacity-0 duration-400 group-hover:opacity-100">
                     <Button
                       size="sm"
                       className="h-6 px-2 text-xs bg-pink-600 hover:bg-pink-700"
@@ -522,58 +522,64 @@ function App() {
                 </div>
               ))}
             </div>
+            <div className="w-full flex justify-center mb-2">
+              <div className="inline-block text-muted-foreground/80 text-md px-3 py-1 rounded-full border bg-card/70 border-card shadow-sm">
+                Screen Preview
+              </div>
+            </div>
             {activeSticker && (
               <div
-                className="relative mx-auto"
+                className="relative mx-auto p-2 rounded-xl border bg-card/60 backdrop-blur-md shadow-lg"
                 style={{
-                  width: previewWidth,
-                  height: previewHeight,
-                  background: '#111',
-                  borderRadius: 2,
-                  overflow: 'hidden'
+                  width: previewWidth + 2,
+                  height: previewHeight + 2,
+                  overflow: 'hidden',
+                  boxSizing: 'content-box'
                 }}
               >
-                <canvas
-                  ref={handleCanvasRef}
-                  width={previewWidth}
-                  height={previewHeight}
-                  className="absolute top-0 left-0 w-full h-full z-0"
-                />
-                <video ref={handleVideoRef} />
-                <Rnd
-                  size={{
-                    width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                    height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
-                  }}
-                  position={{
-                    x: layout.xPct ? layout.xPct * previewWidth : layout.x,
-                    y: layout.yPct ? layout.yPct * previewHeight : layout.y
-                  }}
-                  onDragStop={(e, d) =>
-                    handleLayoutChange(
-                      d.x,
-                      d.y,
-                      layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                      layout.heightPct ? layout.heightPct * previewHeight : layout.height
-                    )
-                  }
-                  onResizeStop={(e, dir, ref, delta, pos) =>
-                    handleLayoutChange(
-                      pos.x,
-                      pos.y,
-                      parseInt(ref.style.width),
-                      parseInt(ref.style.height)
-                    )
-                  }
-                  bounds="parent"
-                  style={{ zIndex: 1 }}
-                >
-                  <img
-                    src={toFileUrl(activeSticker.path)}
-                    alt="active"
-                    className="w-full h-full z-1"
+                <div className="relative w-full h-full rounded-lg overflow-hidden" style={{width: previewWidth, height: previewHeight}}>
+                  <canvas
+                    ref={handleCanvasRef}
+                    width={previewWidth}
+                    height={previewHeight}
+                    className="absolute top-0 left-0 w-full h-full z-0 rounded-lg"
                   />
-                </Rnd>
+                  <video ref={handleVideoRef} />
+                  <Rnd
+                    size={{
+                      width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                      height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                    }}
+                    position={{
+                      x: layout.xPct ? layout.xPct * previewWidth : layout.x,
+                      y: layout.yPct ? layout.yPct * previewHeight : layout.y
+                    }}
+                    onDragStop={(e, d) =>
+                      handleLayoutChange(
+                        d.x,
+                        d.y,
+                        layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                        layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                      )
+                    }
+                    onResizeStop={(e, dir, ref, delta, pos) =>
+                      handleLayoutChange(
+                        pos.x,
+                        pos.y,
+                        parseInt(ref.style.width),
+                        parseInt(ref.style.height)
+                      )
+                    }
+                    bounds="parent"
+                    style={{ zIndex: 1 }}
+                  >
+                    <img
+                      src={toFileUrl(activeSticker.path)}
+                      alt="active"
+                      className="w-full h-full z-1"
+                    />
+                  </Rnd>
+                </div>
               </div>
             )}
           </TabsContent>
