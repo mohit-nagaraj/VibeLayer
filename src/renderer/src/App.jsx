@@ -476,13 +476,13 @@ function App() {
                 {/* Search Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
                   {results.map((item, i) => (
-                    <Card key={i} className="p-2 flex flex-col items-center">
+                    <Card key={i} className="p-2 gap-2 flex flex-col items-center">
                       <img
                         src={item.thumb}
                         alt="result"
                         className="w-24 h-24 object-cover rounded-md"
                       />
-                      <Button onClick={() => handleImport(item)} size="sm" className="mt-2 w-full">
+                      <Button onClick={() => handleImport(item)} size="sm" className="mt-[2px] w-full">
                         Import
                       </Button>
                     </Card>
