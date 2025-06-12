@@ -21,6 +21,7 @@ import { Card } from './components/ui/card'
 import internetImg from './assets/internet.png';
 import downloadImg from './assets/download.png';
 import { Trash } from 'lucide-react'
+import { Switch } from './components/ui/switch'
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/')
@@ -577,42 +578,52 @@ function App() {
             )}
           </TabsContent>
           <TabsContent value="Settings">
-            <div className="max-w-sm flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <Input
-                  type="checkbox"
+            <div className="w-full flex flex-col gap-4">
+              {/* Always on top */}
+              <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
+                <div className="space-y-0.5">
+                  <div className="font-medium">Always on top</div>
+                  <div className="text-muted-foreground text-sm">Keep the window always on top of other windows.</div>
+                </div>
+                <Switch
                   checked={settings.alwaysOnTop}
-                  onChange={(e) => handleSettingsChange('alwaysOnTop', e.target.checked)}
-                  className="w-4 h-4"
+                  onCheckedChange={v => handleSettingsChange('alwaysOnTop', v)}
                 />
-                <span>Always on top</span>
               </div>
-              <div className="flex items-center gap-3">
-                <Input
-                  type="checkbox"
+              {/* Start on system startup */}
+              <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
+                <div className="space-y-0.5">
+                  <div className="font-medium">Start on system startup</div>
+                  <div className="text-muted-foreground text-sm">Launch the app automatically when your system starts.</div>
+                </div>
+                <Switch
                   checked={autoLaunch}
-                  onChange={(e) => {
-                    setAutoLaunch(e.target.checked)
-                    handleSettingsChange('startup', e.target.checked)
+                  onCheckedChange={v => {
+                    setAutoLaunch(v)
+                    handleSettingsChange('startup', v)
                   }}
-                  className="w-4 h-4"
                 />
-                <span>Start on system startup</span>
               </div>
-              <div className="flex items-center gap-3">
-                <Input
-                  type="checkbox"
+              {/* Hide sticker capture */}
+              <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
+                <div className="space-y-0.5">
+                  <div className="font-medium">Hide sticker capture</div>
+                  <div className="text-muted-foreground text-sm">Protect stickers from being captured in screenshots.</div>
+                </div>
+                <Switch
                   checked={settings.hideStickerCapture}
-                  onChange={(e) => handleSettingsChange('hideStickerCapture', e.target.checked)}
-                  className="w-4 h-4"
+                  onCheckedChange={v => handleSettingsChange('hideStickerCapture', v)}
                 />
-                <span>Hide sticker capture</span>
               </div>
-              <div className="flex items-center gap-3">
-                <label>Theme: </label>
+              {/* Theme select */}
+              <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
+                <div className="space-y-0.5">
+                  <div className="font-medium">Theme</div>
+                  <div className="text-muted-foreground text-sm">Choose between dark and light mode.</div>
+                </div>
                 <Select
                   value={settings.theme}
-                  onValueChange={(v) => handleSettingsChange('theme', v)}
+                  onValueChange={v => handleSettingsChange('theme', v)}
                 >
                   <SelectTrigger className="w-32">
                     <SelectValue />
