@@ -20,6 +20,7 @@ import { Label } from './components/ui/label'
 import { Card } from './components/ui/card'
 import internetImg from './assets/internet.png';
 import downloadImg from './assets/download.png';
+import { Trash } from 'lucide-react'
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/')
@@ -44,8 +45,6 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [layout, setLayout] = useState({ x: 100, y: 100, width: 200, height: 200, sticker: null })
   const [activeSticker, setActiveSticker] = useState(null)
-  const [renameId, setRenameId] = useState(null)
-  const [renameValue, setRenameValue] = useState('')
   const [toast, setToast] = useState('')
   const [settings, setSettings] = useState({
     alwaysOnTop: true,
@@ -340,18 +339,6 @@ function App() {
     }
     showToast('Sticker set!')
   }
-  // Rename sticker
-  const handleRename = async (sticker) => {
-    if (!renameValue) return
-    await window.electron.ipcRenderer.invoke('rename-sticker', {
-      oldName: sticker.name,
-      newName: renameValue
-    })
-    setRenameId(null)
-    setRenameValue('')
-    fetchStickers()
-    showToast('Sticker renamed!')
-  }
   // Layout drag/resize
   const handleLayoutChange = (x, y, width, height) => {
     const newLayout = {
@@ -495,72 +482,42 @@ function App() {
             <div className="flex gap-4 flex-wrap mb-8">
               {stickers.length === 0 && <div>No stickers yet.</div>}
               {stickers.map((sticker, i) => (
-                <div key={i} className="bg-muted p-2 rounded-lg flex flex-col items-center">
+                <div key={i} className="bg-muted p-2 px-[30px] pb-[36px] rounded-lg flex flex-col items-center relative group">
                   <img
                     src={toFileUrl(sticker.path)}
                     alt="sticker"
-                    className="w-24 h-24 rounded-lg mb-2"
+                    className="w-24 h-24 rounded-lg mb-[2px]"
                   />
-                  {renameId === sticker.name ? (
-                    <div className="flex gap-1">
-                      <Input
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        className="w-20"
-                      />
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-primary"
-                        onClick={() => handleRename(sticker)}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-destructive"
-                        onClick={() => {
-                          setRenameId(null)
-                          setRenameValue('')
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-primary"
-                        onClick={() => handleSetSticker(sticker)}
-                      >
-                        Set
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-green-600"
-                        onClick={() => handleRemoveBg(sticker)}
-                      >
-                        Remove BG
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-destructive"
-                        onClick={() => handleDelete(sticker)}
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-orange-500"
-                        onClick={() => {
-                          setRenameId(sticker.name)
-                          setRenameValue(sticker.name)
-                        }}
-                      >
-                        Rename
-                      </Button>
-                    </div>
-                  )}
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => handleDelete(sticker)}
+                    className="absolute top-1 right-1 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    aria-label="Delete"
+                  >
+                    <Trash className="w-2 h-2 text-red-500" />
+                  </Button>
+                  <div
+                    className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-200 group-hover:opacity-0"
+                  >
+                    {`Sticker ${i + 1}`}
+                  </div>
+                  <div className="flex gap-2 absolute bottom-[6px] opacity-0 group-hover:opacity-100">
+                    <Button
+                      size="sm"
+                      className="h-6 px-2 text-xs bg-pink-600 hover:bg-pink-700"
+                      onClick={() => handleSetSticker(sticker)}
+                    >
+                      Set
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-6 px-2 text-xs bg-primary"
+                      onClick={() => handleRemoveBg(sticker)}
+                    >
+                      Remove BG
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

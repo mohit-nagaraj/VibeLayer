@@ -20,7 +20,7 @@ VibeLayer is not just another app—it's your _adorable_, always-on-top, see-thr
   - **Online Search:** Find GIFs from Giphy or images from Unsplash, right inside the app.
 - **🪄 Magic Background Removal:** One click and your sticker's background vanishes (thanks, Imgly AI!).
 - **🦄 Layout Freedom:** Drag, resize, and position stickers wherever you want. Your layout is saved—VibeLayer remembers your style.
-- **🗂️ Sticker Management:** Rename, delete, and organize your sticker collection. Marie Kondo would be proud.
+- **🗂️ Sticker Management:** Delete, and organize your sticker collection. Marie Kondo would be proud.
 - **⚙️ Quirky Settings:**
   - Always-on-top toggle (stickers never hide!)
   - Start with your computer (auto-launch)
@@ -75,7 +75,7 @@ yarn build:linux
 
 - **Set as Active:** Click "Set" to float a sticker on your desktop.
 - **Remove Background:** Click "Remove BG" for instant transparency.
-- **Rename/Delete:** Keep your sticker family organized.
+- **Delete:** Keep your sticker family organized.
 
 ### 3. **Layout & Positioning**
 

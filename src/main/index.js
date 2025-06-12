@@ -133,12 +133,6 @@ ipcMain.handle('set-settings', (_, settings) => {
   store.set('settings', settings)
   return true
 })
-ipcMain.handle('rename-sticker', async (_, { oldName, newName }) => {
-  const oldPath = path.join(stickersDir, oldName)
-  const newPath = path.join(stickersDir, newName)
-  if (fs.existsSync(oldPath)) fs.renameSync(oldPath, newPath)
-  return true
-})
 ipcMain.handle('set-auto-launch', async (_, enable) => {
   if (enable) await appLauncher.enable()
   else await appLauncher.disable()
