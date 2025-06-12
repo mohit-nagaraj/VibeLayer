@@ -15,9 +15,11 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import { DotPattern } from '../../components/magicui/dot-pattern'
 import CustomTitleBar from './components/CustomTitleBar'
-import { ArrowDownToLine, Globe, SearchIcon } from 'lucide-react'
+import { SearchIcon } from 'lucide-react'
 import { Label } from './components/ui/label'
 import { Card } from './components/ui/card'
+import internetImg from './assets/internet.png';
+import downloadImg from './assets/download.png';
 
 function toFileUrl(filePath) {
   let path = filePath.replace(/\\/g, '/')
@@ -393,11 +395,17 @@ function App() {
             <TabsContent value="Search">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Local File Upload Box */}
-                <Card className="p-4 flex flex-col items-center justify-between gap-4">
-                  <div className="w-full text-left font-semibold">Local File</div>
-                  <div className="w-full border border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center p-6">
-                    <ArrowDownToLine className="w-10 h-10 text-purple-500 mb-2" />
-                    <Label htmlFor="local-file" className="cursor-pointer">
+                <Card className="p-4 flex flex-col items-center justify-between gap-2">
+                  <div className="flex w-full items-center justify-between gap-2">
+                  <div className="w-full text-left font-semibold text-2xl">Local File</div>
+                  {loading && localFile ? (
+                    <div className="text-sm text-muted-foreground">Loading...</div>
+                  ) : (
+                    <Button size={"sm"} className={"ml-auto"} onClick={handleImportLocalButton}>Import</Button>
+                  )}
+                  </div>
+                  <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
+                    <Label htmlFor="local-file" className="cursor-pointer ">
                       Choose file...{' '}
                       <span className="text-sm text-muted-foreground">or Drag n Drop</span>
                     </Label>
@@ -408,38 +416,58 @@ function App() {
                       onChange={handleImportLocal}
                       className="hidden"
                     />
+                    
+                      <img
+                        src={localPreview?? downloadImg}
+                        alt="preview"
+                        className="w-24 h-24 object-cover rounded-md mt-4"
+                        style={{marginTop: '3px', marginBottom: '-15px'}}
+                      />
+                    
                   </div>
-                  <Button onClick={handleImportLocalButton}>Import</Button>
                 </Card>
 
                 {/* URL Import Box */}
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
-                  <div className="w-full text-left font-semibold">URL/ Direct Link</div>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
+                  <Button className={"ml-auto"} size={"sm"} onClick={handleImportUrl}>Import</Button>
+
+                </div>
+                <div className="w-full min-h-48 flex flex-col items-center">
+
                   <Input
                     value={importUrl}
                     onChange={(e) => setImportUrl(e.target.value)}
                     placeholder="https://..."
-                  />
-                  <Globe className="w-10 h-10 text-purple-500" />
-                  <Button onClick={handleImportUrl}>Import</Button>
+                    />
+                      <img
+                        src={importUrl!=""?importUrl:internetImg}
+                        alt="internet"
+                        className="w-24 h-24 object-cover rounded-md"
+                        style={{marginTop: '30px'}}
+                      />
+                    </div>
                 </Card>
               </div>
 
-              {/* Online Search */}
-              <div className="mt-10">
-                <div className="text-lg font-semibold mb-2">Search online</div>
+              <div className="my-6" />
+
+              <div className="mt-10" style={{marginTop:"16px"}}>
+                <div className="font-semibold mb-2 text-2xl">Search online</div>
                 <div className="flex items-center gap-2 mb-4">
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Start typing keywords..."
+                    className="backdrop-blur-xs"
                   />
                   <Button onClick={handleSearch} disabled={loading}>
                     <SearchIcon className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {loading && <div>Loading...</div>}
+                {loading && search ? <div>Loading...</div> : null}
 
                 {/* Search Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">

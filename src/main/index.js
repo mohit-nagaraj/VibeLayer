@@ -64,7 +64,7 @@ function createWindows() {
   managerWindow.on('ready-to-show', () => {
     managerWindow.show()
   })
-  // managerWindow.setContentProtection(true);
+  managerWindow.setContentProtection(true);
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     stickerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/sticker.html')
