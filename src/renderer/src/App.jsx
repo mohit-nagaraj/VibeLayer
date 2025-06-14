@@ -390,7 +390,7 @@ function App() {
                     {loading && localFile ? (
                       <div className="text-sm text-muted-foreground">Loading...</div>
                     ) : (
-                      <Button size={"sm"} className={"ml-auto cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>
+                      <Button size={"sm"} className={"ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>
                     )}
                   </div>
                   <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
@@ -420,7 +420,7 @@ function App() {
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
                   <div className="flex w-full items-center justify-between gap-2">
                     <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                    <Button className={"ml-auto cursor-pointer"} size={"sm"} onClick={handleImportUrl}>Import</Button>
+                    <Button className={"ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} size={"sm"} onClick={handleImportUrl}>Import</Button>
 
                   </div>
                   <div className="w-full min-h-48 flex flex-col items-center">
@@ -454,7 +454,7 @@ function App() {
                     placeholder="Start typing keywords..."
                     className="backdrop-blur-xs"
                   />
-                  <Button className={"cursor-pointer"} onClick={() => handleSearch(searchRef.current.value)} disabled={loading}>
+                  <Button className={"cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} onClick={() => handleSearch(searchRef.current.value)} disabled={loading}>
                     <SearchIcon className="w-4 h-4" />
                   </Button>
                 </div>
@@ -470,7 +470,7 @@ function App() {
                         alt="result"
                         className="w-24 h-24 object-cover rounded-md"
                       />
-                      <Button onClick={() => handleImport(item)} size="sm" className="mt-[2px] w-full">
+                      <Button onClick={() => handleImport(item)} size="sm" className="mt-[2px] w-full bg-pink-600 text-white hover:bg-pink-700">
                         Import
                       </Button>
                     </Card>
@@ -506,7 +506,7 @@ function App() {
                   <div className="flex gap-2 absolute bottom-[6px] opacity-0 duration-400 group-hover:opacity-100">
                     <Button
                       size="sm"
-                      className="h-6 px-2 text-xs bg-pink-600 hover:bg-pink-700"
+                      className="h-6 px-2 text-xs bg-pink-600 text-white hover:bg-pink-700"
                       onClick={() => handleSetSticker(sticker)}
                     >
                       Set
@@ -546,6 +546,7 @@ function App() {
                   />
                   <video ref={handleVideoRef} />
                   <Rnd
+                    className=''
                     size={{
                       width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
                       height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
@@ -572,7 +573,8 @@ function App() {
                     }
                     bounds="parent"
                     style={{ zIndex: 1 }}
-                  >
+                  > 
+                    <div className='absolute top-0 left-0 w-full h-full z-2 border-[2px] transition-all duration-300 border-transparent hover:border-pink-600/33 rounded-sm'></div>
                     <img
                       src={toFileUrl(activeSticker.path)}
                       alt="active"

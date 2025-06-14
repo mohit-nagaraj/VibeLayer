@@ -103,7 +103,11 @@ function createWindows() {
 const stickersDir = path.join(app.getPath('userData'), 'stickers')
 if (!fs.existsSync(stickersDir)) fs.mkdirSync(stickersDir)
 
-const appLauncher = new AutoLaunch({ name: 'VibeLayer' })
+const appLauncher = new AutoLaunch({ 
+  name: 'VibeLayer',
+  path: app.getPath('exe'),
+  args: ['--no-sandbox']
+})
 
 const store = new (Store.default || Store)()
 
