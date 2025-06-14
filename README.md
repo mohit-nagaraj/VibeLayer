@@ -7,7 +7,7 @@
 
 ![preview](https://github.com/user-attachments/assets/ce5bb19f-8848-4b9e-9134-ac4d8463cefd)
 
-VibeLayer is not just another app—it's your _adorable_, always-on-top, see-through sticker buddy! Overlay cute, quirky, or motivational stickers (with transparent backgrounds!) right on your desktop. Make your workspace fun, personal, and a little bit magical. ✨
+VibeLayer is not just another app - it's your _adorable_, always-on-top, see-through sticker buddy! Overlay cute, quirky, or motivational stickers (with transparent backgrounds!) right on your desktop. Make your workspace fun, personal, and a little bit magical. ✨
 
 ---
 
@@ -16,10 +16,10 @@ VibeLayer is not just another app—it's your _adorable_, always-on-top, see-thr
 - **🖼️ Transparent Stickers:** Place stickers _anywhere_ on your screen. They float above your work, always on top, always adorable.
 - **🌐 Import from Anywhere:**
   - **Local files:** Drag, drop, or select images from your computer.
-  - **Direct URLs:** Paste any image link and boom—sticker!
+  - **Direct URLs:** Paste any image link and boom - sticker!
   - **Online Search:** Find GIFs from Giphy or images from Unsplash, right inside the app.
 - **🪄 Magic Background Removal:** One click and your sticker's background vanishes (thanks, Imgly AI!).
-- **🦄 Layout Freedom:** Drag, resize, and position stickers wherever you want. Your layout is saved—VibeLayer remembers your style.
+- **🦄 Layout Freedom:** Drag, resize, and position stickers wherever you want. Your layout is saved - VibeLayer remembers your style.
 - **🗂️ Sticker Management:** Delete, and organize your sticker collection. Marie Kondo would be proud.
 - **⚙️ Quirky Settings:**
   - Always-on-top toggle (stickers never hide!)
@@ -27,7 +27,7 @@ VibeLayer is not just another app—it's your _adorable_, always-on-top, see-thr
   - Hide sticker capture (for secret vibes)
   - Dark & light themes (for every mood)
 - **🔒 Privacy First:** Stickers and settings are stored _locally_. No cloud, no snooping.
-- **💻 Cross-Platform:** Windows, macOS, Linux—everyone gets to vibe!
+- **💻 Cross-Platform:** Windows, macOS, Linux - everyone gets to vibe!
 
 
 ## 🖼️ Screenshots
@@ -80,14 +80,14 @@ yarn build:linux
 ### 3. **Layout & Positioning**
 
 - Drag and resize stickers in the "Layout" tab.
-- Layouts are saved—your desktop stays just how you like it.
+- Layouts are saved - your desktop stays just how you like it.
 
 ### 4. **Settings for Every Mood**
 
 - **Always on Top:** Stickers never hide, even when you're busy.
 - **Start on Boot:** VibeLayer wakes up with your computer.
 - **Hide Sticker Capture:** For when you want your stickers to be _extra_ private.
-- **Theme:** Dark or light—pick your vibe.
+- **Theme:** Dark or light - pick your vibe.
 
 ## 🛠️ Tech Stack (a.k.a. The Secret Sauce)
 
@@ -127,4 +127,4 @@ yarn build:linux
 
 ---
 
-> **VibeLayer** — Because your desktop deserves a little _personality_!
+> **VibeLayer**  -  Because your desktop deserves a little _personality_!
