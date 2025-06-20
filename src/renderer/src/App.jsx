@@ -64,6 +64,8 @@ function App() {
   const [importUrl, setImportUrl] = useState('')
   const [imgError, setImgError] = useState(false)
   const searchRef = useRef();
+  const [aspectLock, setAspectLock] = useState(true);
+  const [toolbarSize, setToolbarSize] = useState({ width: 200, height: 200 });
 
   useEffect(() => {
     fetchStickers()
@@ -112,6 +114,15 @@ function App() {
   const previewScale = 0.25
   const previewWidth = Math.round(screenSize.width * previewScale)
   const previewHeight = Math.round(screenSize.height * previewScale)
+
+  useEffect(() => {
+    if (activeSticker && layout.width && layout.height) {
+      setToolbarSize({
+        width: Math.round(layout.widthPct ? layout.widthPct * previewWidth : layout.width),
+        height: Math.round(layout.heightPct ? layout.heightPct * previewHeight : layout.height)
+      });
+    }
+  }, [activeSticker, layout, previewWidth, previewHeight]);
 
   const initDrawingIfReady = useCallback(() => {
     // Make sure everything is ready
@@ -340,17 +351,55 @@ function App() {
     }
     showToast('Sticker set!')
   }
-  // Layout drag/resize
-  const handleLayoutChange = (x, y, width, height) => {
-    // Clamp values to keep sticker within preview bounds
+  // Helper to get aspect ratio
+  const getAspectRatio = () => {
+    const w = layout.widthPct ? layout.widthPct * previewWidth : layout.width;
+    const h = layout.heightPct ? layout.heightPct * previewHeight : layout.height;
+    return w / h;
+  };
+
+  // Handler for toolbar input change
+  const handleToolbarSizeChange = (field, value) => {
+    let newWidth = toolbarSize.width;
+    let newHeight = toolbarSize.height;
+    const aspect = getAspectRatio();
+    if (field === 'width') {
+      newWidth = Math.max(24, Math.min(Number(value), previewWidth));
+      newHeight = aspectLock ? Math.round(newWidth / aspect) : toolbarSize.height;
+    } else {
+      newHeight = Math.max(24, Math.min(Number(value), previewHeight));
+      newWidth = aspectLock ? Math.round(newHeight * aspect) : toolbarSize.width;
+    }
+    setToolbarSize({ width: newWidth, height: newHeight });
+    // Immediately update layout
+    handleLayoutChange(
+      layout.xPct ? layout.xPct * previewWidth : layout.x,
+      layout.yPct ? layout.yPct * previewHeight : layout.y,
+      newWidth,
+      newHeight
+    );
+  };
+
+  // Modified handleLayoutChange to optionally preserve aspect ratio
+  const handleLayoutChange = (x, y, width, height, forceAspect) => {
+    const aspect = getAspectRatio();
+    let newWidth = width;
+    let newHeight = height;
+    if (aspectLock || forceAspect) {
+      // preserve aspect ratio
+      if (width / height > aspect) {
+        newWidth = Math.round(height * aspect);
+      } else {
+        newHeight = Math.round(width / aspect);
+      }
+    }
     const safePadding = 0.01; // px, adjust as needed
-    const maxX = previewWidth - width - safePadding;
-    const maxY = previewHeight - height - safePadding;
+    const maxX = previewWidth - newWidth - safePadding;
+    const maxY = previewHeight - newHeight - safePadding;
     const clampedX = Math.max(safePadding, Math.min(x, maxX));
     const clampedY = Math.max(safePadding, Math.min(y, maxY));
-    const clampedWidth = Math.max(24, Math.min(width, previewWidth - clampedX - safePadding));
-    const clampedHeight = Math.max(24, Math.min(height, previewHeight - clampedY - safePadding));
-
+    const clampedWidth = Math.max(24, Math.min(newWidth, previewWidth - clampedX - safePadding));
+    const clampedHeight = Math.max(24, Math.min(newHeight, previewHeight - clampedY - safePadding));
     const newLayout = {
       ...layout,
       xPct: clampedX / previewWidth,
@@ -367,7 +416,8 @@ function App() {
         stickerUrl: newLayout.sticker ? toFileUrl(newLayout.sticker.path) : undefined
       });
     }
-  }
+  };
+
   // Settings
   const handleSettingsChange = async (field, value) => {
     const newSettings = { ...settings, [field]: value }
@@ -537,61 +587,104 @@ function App() {
               </div>
             </div>
             {activeSticker && (
-              <div
-                className="relative mx-auto p-2 rounded-xl border bg-card/60 backdrop-blur-md shadow-lg"
-                style={{
-                  width: previewWidth + 2,
-                  height: previewHeight + 2,
-                  overflow: 'hidden',
-                  boxSizing: 'content-box'
-                }}
-              >
-                <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ width: previewWidth, height: previewHeight }}>
-                  <canvas
-                    ref={handleCanvasRef}
-                    width={previewWidth}
-                    height={previewHeight}
-                    className="absolute top-0 left-0 w-full h-full z-0 rounded-lg"
-                  />
-                  <video ref={handleVideoRef} />
-                  <Rnd
-                    className=''
-                    size={{
-                      width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                      height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
-                    }}
-                    position={{
-                      x: layout.xPct ? layout.xPct * previewWidth : layout.x,
-                      y: layout.yPct ? layout.yPct * previewHeight : layout.y
-                    }}
-                    onDragStop={(e, d) =>
-                      handleLayoutChange(
-                        d.x,
-                        d.y,
-                        layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                        layout.heightPct ? layout.heightPct * previewHeight : layout.height
-                      )
-                    }
-                    onResizeStop={(e, dir, ref, delta, pos) =>
-                      handleLayoutChange(
-                        pos.x,
-                        pos.y,
-                        parseInt(ref.style.width),
-                        parseInt(ref.style.height)
-                      )
-                    }
-                    bounds="parent"
-                    style={{ zIndex: 1 }}
-                  >
-                    <div className='absolute top-0 left-0 w-full h-full z-2 border-[2px] transition-all duration-300 border-transparent hover:border-pink-600/33 rounded-sm'></div>
-                    <img
-                      src={toFileUrl(activeSticker.path)}
-                      alt="active"
-                      className="w-full h-full z-1"
+              <>
+                
+                {/* Sticker preview and Rnd */}
+                <div
+                  className="relative mx-auto p-2 rounded-xl border bg-card/60 backdrop-blur-md shadow-lg"
+                  style={{
+                    width: previewWidth + 2,
+                    height: previewHeight + 2,
+                    overflow: 'hidden',
+                    boxSizing: 'content-box'
+                  }}
+                >
+                  <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ width: previewWidth, height: previewHeight }}>
+                    <canvas
+                      ref={handleCanvasRef}
+                      width={previewWidth}
+                      height={previewHeight}
+                      className="absolute top-0 left-0 w-full h-full z-0 rounded-lg"
                     />
-                  </Rnd>
+                    <video ref={handleVideoRef} />
+                    <Rnd
+                      className=''
+                      size={{
+                        width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                        height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                      }}
+                      position={{
+                        x: layout.xPct ? layout.xPct * previewWidth : layout.x,
+                        y: layout.yPct ? layout.yPct * previewHeight : layout.y
+                      }}
+                      onDragStop={(e, d) =>
+                        handleLayoutChange(
+                          d.x,
+                          d.y,
+                          layout.widthPct ? layout.widthPct * previewWidth : layout.width,
+                          layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                        )
+                      }
+                      onResizeStop={(e, dir, ref, delta, pos) => {
+                        const w = parseInt(ref.style.width);
+                        const h = parseInt(ref.style.height);
+                        handleLayoutChange(
+                          pos.x,
+                          pos.y,
+                          w,
+                          h
+                        );
+                      }}
+                      bounds="parent"
+                      style={{ zIndex: 1 }}
+                      lockAspectRatio={aspectLock}
+                    >
+                      <div className='absolute top-0 left-0 w-full h-full z-2 border-[2px] transition-all duration-300 border-transparent hover:border-pink-600/33 rounded-sm'></div>
+                      <img
+                        src={toFileUrl(activeSticker.path)}
+                        alt="active"
+                        className="w-full h-full z-1"
+                      />
+                    </Rnd>
+                  </div>
                 </div>
-              </div>
+                {/* Toolbar for width/height and aspect lock */}
+                <div className="flex mt-4 items-center gap-4 mb-2 justify-center">
+                  <label className="flex items-center gap-1 text-sm">
+                    W(px) :
+                    <input
+                      type="number"
+                      min={24}
+                      max={previewWidth}
+                      value={toolbarSize.width}
+                      onChange={e => handleToolbarSizeChange('width', e.target.value)}
+                      className="w-16 px-2 py-1 border rounded text-sm bg-card"
+                    />
+                    
+                  </label>
+                  <label className="flex items-center gap-1 text-sm">
+                    H(px) :
+                    <input
+                      type="number"
+                      min={24}
+                      max={previewHeight}
+                      value={toolbarSize.height}
+                      onChange={e => handleToolbarSizeChange('height', e.target.value)}
+                      className="w-16 px-2 py-1 border rounded text-sm bg-card"
+                    />
+                    
+                  </label>
+                  <label className="flex items-center gap-1 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={aspectLock}
+                      onChange={e => setAspectLock(e.target.checked)}
+                      className="accent-pink-600"
+                    />
+                    Lock aspect ratio
+                  </label>
+                </div>
+              </>
             )}
           </TabsContent>
           <TabsContent value="Settings">

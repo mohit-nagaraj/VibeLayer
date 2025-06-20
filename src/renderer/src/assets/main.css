@@ -248,7 +248,18 @@ body[style*='background: transparent;'] #root {
   flex-shrink: 0;
   padding: 6px;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
+input[type=number] {
+  appearance: textfield;
+  outline: none;
+  
+  -moz-appearance: textfield;
+}
 .action a {
   cursor: pointer;
   text-decoration: none;
