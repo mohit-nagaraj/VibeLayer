@@ -390,7 +390,7 @@ function App() {
                     {loading && localFile ? (
                       <div className="text-sm text-muted-foreground">Loading...</div>
                     ) : (
-                      <Button size={"sm"} className={"ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>
+                      localPreview? <Button size={"sm"} className={"ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>:null
                     )}
                   </div>
                   <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
@@ -420,7 +420,7 @@ function App() {
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
                   <div className="flex w-full items-center justify-between gap-2">
                     <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                    <Button className={"ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} size={"sm"} onClick={handleImportUrl}>Import</Button>
+                    {importUrl&&<Button className={"ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} size={"sm"} onClick={handleImportUrl}>Import</Button>}
 
                   </div>
                   <div className="w-full min-h-48 flex flex-col items-center">
