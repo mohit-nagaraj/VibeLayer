@@ -342,21 +342,30 @@ function App() {
   }
   // Layout drag/resize
   const handleLayoutChange = (x, y, width, height) => {
+    // Clamp values to keep sticker within preview bounds
+    const safePadding = 0.01; // px, adjust as needed
+    const maxX = previewWidth - width - safePadding;
+    const maxY = previewHeight - height - safePadding;
+    const clampedX = Math.max(safePadding, Math.min(x, maxX));
+    const clampedY = Math.max(safePadding, Math.min(y, maxY));
+    const clampedWidth = Math.max(24, Math.min(width, previewWidth - clampedX - safePadding));
+    const clampedHeight = Math.max(24, Math.min(height, previewHeight - clampedY - safePadding));
+
     const newLayout = {
       ...layout,
-      xPct: x / previewWidth,
-      yPct: y / previewHeight,
-      widthPct: width / previewWidth,
-      heightPct: height / previewHeight,
+      xPct: clampedX / previewWidth,
+      yPct: clampedY / previewHeight,
+      widthPct: clampedWidth / previewWidth,
+      heightPct: clampedHeight / previewHeight,
       sticker: activeSticker
-    }
-    setLayout(newLayout)
-    saveLayout(newLayout)
+    };
+    setLayout(newLayout);
+    saveLayout(newLayout);
     if (window.electron?.ipcRenderer) {
       window.electron.ipcRenderer.send('update-sticker-layout', {
         ...newLayout,
         stickerUrl: newLayout.sticker ? toFileUrl(newLayout.sticker.path) : undefined
-      })
+      });
     }
   }
   // Settings
@@ -390,7 +399,7 @@ function App() {
                     {loading && localFile ? (
                       <div className="text-sm text-muted-foreground">Loading...</div>
                     ) : (
-                      localPreview? <Button size={"sm"} className={"ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer"} onClick={handleImportLocalButton}>Import</Button>:null
+                      localPreview ? <Button size={"sm"} className={"ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer"} onClick={handleImportLocalButton}>Import</Button> : null
                     )}
                   </div>
                   <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
@@ -420,7 +429,7 @@ function App() {
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
                   <div className="flex w-full items-center justify-between gap-2">
                     <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                    {importUrl&&<Button className={"ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} size={"sm"} onClick={handleImportUrl}>Import</Button>}
+                    {importUrl && <Button className={"ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} size={"sm"} onClick={handleImportUrl}>Import</Button>}
 
                   </div>
                   <div className="w-full min-h-48 flex flex-col items-center">
@@ -537,7 +546,7 @@ function App() {
                   boxSizing: 'content-box'
                 }}
               >
-                <div className="relative w-full h-full rounded-lg overflow-hidden" style={{width: previewWidth, height: previewHeight}}>
+                <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ width: previewWidth, height: previewHeight }}>
                   <canvas
                     ref={handleCanvasRef}
                     width={previewWidth}
@@ -573,7 +582,7 @@ function App() {
                     }
                     bounds="parent"
                     style={{ zIndex: 1 }}
-                  > 
+                  >
                     <div className='absolute top-0 left-0 w-full h-full z-2 border-[2px] transition-all duration-300 border-transparent hover:border-pink-600/33 rounded-sm'></div>
                     <img
                       src={toFileUrl(activeSticker.path)}
