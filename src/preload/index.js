@@ -14,18 +14,23 @@ const api = {
   }),
 
   /**
+   * Return all available screens
+   */
+  getAllScreens: () => ipcRenderer.invoke('get-all-screens'),
+
+  /**
+   * Return info for a specific screen
+   */
+  getScreenInfo: (screenId) => ipcRenderer.invoke('get-screen-info', screenId),
+
+  /**
    * Return the desktop-capturer ID for the primary screen.
    * The renderer should call getUserMedia() with this ID.
    */
-  async getPrimaryScreenSourceId() {
+  async getPrimaryScreenSourceId(screenId) {
     try {
-      const sources = await ipcRenderer.invoke(
-        'DESKTOP_CAPTURER_GET_SOURCES',
-        { types: ['screen'] } // add 'window' if you need windows too
-      )
-
-      if (!sources?.length) throw new Error('No screen sources found')
-      return sources[0].id // e.g. 'screen:0:0'
+      const sourceId = await ipcRenderer.invoke('get-primary-screen-source-id', screenId)
+      return sourceId
     } catch (err) {
       console.error('getPrimaryScreenSourceId failed:', err)
       throw err

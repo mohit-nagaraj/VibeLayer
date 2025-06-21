@@ -66,6 +66,12 @@ function App() {
   const searchRef = useRef();
   const [aspectLock, setAspectLock] = useState(true);
   const [toolbarSize, setToolbarSize] = useState({ width: 200, height: 200 });
+  
+  // Multi-screen support
+  const [screens, setScreens] = useState([])
+  const [selectedScreen, setSelectedScreen] = useState(null)
+  const [selectedScreens, setSelectedScreens] = useState([]) // For multi-screen display
+  const [screenLayouts, setScreenLayouts] = useState({}) // Different layouts per screen
 
   useEffect(() => {
     fetchStickers()
@@ -76,36 +82,126 @@ function App() {
   useEffect(() => {
     loadSettings()
   }, [])
+  
+  // Load screens on mount
+  useEffect(() => {
+    const loadScreens = async () => {
+      try {
+        const allScreens = await window.electron.getAllScreens()
+        console.log('Loaded screens:', allScreens)
+        setScreens(allScreens)
+        if (allScreens.length > 0) {
+          setSelectedScreen(allScreens[0])
+          setSelectedScreens([allScreens[0].id]) // Default to first screen
+          // Initialize screen layouts
+          const initialLayouts = {}
+          allScreens.forEach(screen => {
+            initialLayouts[screen.id] = { x: 100, y: 100, width: 200, height: 200, sticker: null }
+          })
+          setScreenLayouts(initialLayouts)
+        }
+      } catch (error) {
+        console.error('Failed to load screens:', error)
+      }
+    }
+    loadScreens()
+  }, [])
+
   useEffect(() => {
     ; (async () => {
-      // 1· Get screen size (unchanged)
-      if (window.electron?.getScreenInfo) {
-        const { width, height } = await window.electron.getScreenInfo()
-        setScreenSize({ width, height })
+      // Get screen size for selected screen
+      if (selectedScreen && window.electron?.getScreenInfo) {
+        setScreenSize({ 
+          width: selectedScreen.bounds.width, 
+          height: selectedScreen.bounds.height 
+        })
+        
+        // Update layout to match selected screen
+        const screenLayout = screenLayouts[selectedScreen.id] || { x: 100, y: 100, width: 200, height: 200, sticker: null }
+        setLayout(screenLayout)
+        setActiveSticker(screenLayout.sticker)
       }
 
-      // 2· Ask preload for the primary screen's source-ID
-      if (window.electron?.getPrimaryScreenSourceId) {
-        const sourceId = await window.electron.getPrimaryScreenSourceId()
+      // Get screen source ID for selected screen
+      if (selectedScreen && window.electron?.getPrimaryScreenSourceId) {
+        try {
+          const sourceId = await window.electron.getPrimaryScreenSourceId(selectedScreen.id)
+          console.log('Got source ID for screen:', selectedScreen.id, sourceId)
 
-        // 3· Create a real MediaStream *in the renderer*
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            mandatory: {
-              chromeMediaSource: 'desktop',
-              chromeMediaSourceId: sourceId,
-              minWidth: 1280,
-              minHeight: 720,
-              maxWidth: 9999,
-              maxHeight: 9999
-            }
+          // Stop existing stream if any
+          if (screenStream) {
+            screenStream.getTracks().forEach(track => track.stop())
+            setScreenStream(null)
           }
-        })
-        setScreenStream(stream) // ← now a genuine MediaStream
+
+          // Reset video element
+          if (videoRef.current) {
+            videoRef.current.srcObject = null
+          }
+
+          // Create a real MediaStream *in the renderer*
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              mandatory: {
+                chromeMediaSource: 'desktop',
+                chromeMediaSourceId: sourceId,
+                minWidth: 1280,
+                minHeight: 720,
+                maxWidth: 9999,
+                maxHeight: 9999
+              }
+            }
+          })
+          
+          console.log('Screen stream created successfully')
+          setScreenStream(stream) // ← now a genuine MediaStream
+          
+          // Reset video element with new stream
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+            videoRef.current.muted = true
+            videoRef.current.playsInline = true
+          }
+        } catch (error) {
+          console.error('Failed to get screen stream:', error)
+          setScreenStream(null)
+          
+          // Try fallback: get all sources and use the first one
+          try {
+            console.log('Trying fallback screen capture...')
+            const sources = await window.electron.listDesktopSources({ types: ['screen'] })
+            if (sources && sources.length > 0) {
+              const fallbackStream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                  mandatory: {
+                    chromeMediaSource: 'desktop',
+                    chromeMediaSourceId: sources[0].id,
+                    minWidth: 1280,
+                    minHeight: 720,
+                    maxWidth: 9999,
+                    maxHeight: 9999
+                  }
+                }
+              })
+              console.log('Fallback screen stream created successfully')
+              setScreenStream(fallbackStream)
+              
+              if (videoRef.current) {
+                videoRef.current.srcObject = fallbackStream
+                videoRef.current.muted = true
+                videoRef.current.playsInline = true
+              }
+            }
+          } catch (fallbackError) {
+            console.error('Fallback screen capture also failed:', fallbackError)
+          }
+        }
       }
     })()
-  }, [])
+  }, [selectedScreen, screenLayouts])
+  
   useEffect(() => {
     // Set dark mode class on root for shadcn/tailwind
     document.documentElement.classList.toggle('dark', settings.theme === 'dark')
@@ -126,7 +222,14 @@ function App() {
 
   const initDrawingIfReady = useCallback(() => {
     // Make sure everything is ready
-    if (!screenStream || !videoRef.current || !canvasRef.current) return
+    if (!screenStream || !videoRef.current || !canvasRef.current) {
+      console.log('Drawing not ready:', { 
+        hasStream: !!screenStream, 
+        hasVideo: !!videoRef.current, 
+        hasCanvas: !!canvasRef.current 
+      })
+      return
+    }
 
     const video = videoRef.current
     const canvas = canvasRef.current
@@ -145,6 +248,7 @@ function App() {
 
     // Start drawing after metadata is ready
     const start = () => {
+      console.log('Starting video playback and drawing')
       video.play().catch(console.error) // handle promise   :contentReference[oaicite:2]{index=2}
       const render = () => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height) // canvas API :contentReference[oaicite:3]{index=3}
@@ -156,15 +260,23 @@ function App() {
     video.addEventListener('loadedmetadata', start, { once: true }) // fire when size known :contentReference[oaicite:5]{index=5}
   }, [screenStream, previewWidth, previewHeight])
 
+  // Reinitialize drawing when screenStream changes
+  useEffect(() => {
+    if (screenStream) {
+      console.log('Screen stream changed, reinitializing drawing')
+      initDrawingIfReady()
+    }
+  }, [screenStream, initDrawingIfReady])
+
   const handleVideoRef = useCallback(
     (node) => {
       if (node) {
         console.log('Video node is ready')
         videoRef.current = node
-        initDrawingIfReady()
+        // Don't call initDrawingIfReady here, let the useEffect handle it
       }
     },
-    [screenStream, previewWidth, previewHeight]
+    []
   )
 
   const handleCanvasRef = useCallback(
@@ -172,10 +284,10 @@ function App() {
       if (node) {
         console.log('Canvas node is ready')
         canvasRef.current = node
-        initDrawingIfReady()
+        // Don't call initDrawingIfReady here, let the useEffect handle it
       }
     },
-    [screenStream, previewWidth, previewHeight]
+    []
   )
 
   const showToast = (msg) => {
@@ -343,11 +455,32 @@ function App() {
     setActiveSticker(sticker)
     // Use toFileUrl when sending to sticker window
     const stickerUrl = toFileUrl(sticker.path)
-    const newLayout = { ...l, sticker: sticker, stickerUrl }
+    
+    // Update layout for current screen
+    const newLayout = { 
+      ...l, 
+      sticker: sticker, 
+      stickerUrl,
+      screenId: selectedScreen?.id
+    }
     setLayout(newLayout)
+    
+    // Update screen layouts
+    const updatedScreenLayouts = { ...screenLayouts }
+    updatedScreenLayouts[selectedScreen.id] = newLayout
+    setScreenLayouts(updatedScreenLayouts)
+    
     saveLayout(newLayout)
+    
     if (window.electron?.ipcRenderer) {
-      window.electron.ipcRenderer.send('update-sticker-layout', newLayout)
+      // Send to all selected screens
+      selectedScreens.forEach(screenId => {
+        const screenLayout = updatedScreenLayouts[screenId] || newLayout
+        window.electron.ipcRenderer.send('update-sticker-layout', {
+          ...screenLayout,
+          screenId
+        })
+      })
     }
     showToast('Sticker set!')
   }
@@ -400,21 +533,35 @@ function App() {
     const clampedY = Math.max(safePadding, Math.min(y, maxY));
     const clampedWidth = Math.max(24, Math.min(newWidth, previewWidth - clampedX - safePadding));
     const clampedHeight = Math.max(24, Math.min(newHeight, previewHeight - clampedY - safePadding));
+    
     const newLayout = {
       ...layout,
       xPct: clampedX / previewWidth,
       yPct: clampedY / previewHeight,
       widthPct: clampedWidth / previewWidth,
       heightPct: clampedHeight / previewHeight,
-      sticker: activeSticker
+      sticker: activeSticker,
+      screenId: selectedScreen?.id
     };
+    
     setLayout(newLayout);
+    
+    // Update screen layouts
+    const updatedScreenLayouts = { ...screenLayouts }
+    updatedScreenLayouts[selectedScreen.id] = newLayout
+    setScreenLayouts(updatedScreenLayouts)
+    
     saveLayout(newLayout);
+    
     if (window.electron?.ipcRenderer) {
-      window.electron.ipcRenderer.send('update-sticker-layout', {
-        ...newLayout,
-        stickerUrl: newLayout.sticker ? toFileUrl(newLayout.sticker.path) : undefined
-      });
+      // Send to all selected screens
+      selectedScreens.forEach(screenId => {
+        const screenLayout = updatedScreenLayouts[screenId] || newLayout
+        window.electron.ipcRenderer.send('update-sticker-layout', {
+          ...screenLayout,
+          screenId
+        })
+      })
     }
   };
 
@@ -424,6 +571,71 @@ function App() {
     setSettings(newSettings)
     saveSettings(newSettings)
     if (field === 'startup') await window.electron.ipcRenderer.invoke('set-auto-launch', value)
+  }
+
+  // Handle screen selection
+  const handleScreenSelection = (screenId) => {
+    const screen = screens.find(s => s.id === screenId)
+    if (screen) {
+      console.log('Selected screen:', screen)
+      setSelectedScreen(screen)
+    }
+  }
+
+  // Handle multi-screen selection
+  const handleMultiScreenSelection = (screenId, checked) => {
+    console.log('Multi-screen selection:', screenId, checked)
+    
+    if (checked) {
+      setSelectedScreens(prev => [...prev, screenId])
+    } else {
+      // Remove sticker from unchecked screen
+      if (window.electron?.ipcRenderer) {
+        window.electron.ipcRenderer.send('update-sticker-layout', {
+          sticker: null,
+          stickerUrl: null,
+          screenId: screenId
+        })
+      }
+      setSelectedScreens(prev => prev.filter(id => id !== screenId))
+    }
+  }
+
+  // Set sticker for specific screen
+  const handleSetStickerForScreen = (sticker, screenId) => {
+    const screen = screens.find(s => s.id === screenId)
+    if (!screen) return
+    
+    const stickerUrl = toFileUrl(sticker.path)
+    const currentLayout = screenLayouts[screenId] || { x: 100, y: 100, width: 200, height: 200, sticker: null }
+    
+    const newLayout = {
+      ...currentLayout,
+      sticker: sticker,
+      stickerUrl,
+      screenId: screenId
+    }
+    
+    // Update screen layouts
+    const updatedScreenLayouts = { ...screenLayouts }
+    updatedScreenLayouts[screenId] = newLayout
+    setScreenLayouts(updatedScreenLayouts)
+    
+    // If this is the currently selected screen, update the main layout
+    if (selectedScreen?.id === screenId) {
+      setLayout(newLayout)
+      setActiveSticker(sticker)
+    }
+    
+    // Send to the specific screen
+    if (window.electron?.ipcRenderer) {
+      window.electron.ipcRenderer.send('update-sticker-layout', {
+        ...newLayout,
+        screenId
+      })
+    }
+    
+    showToast(`Sticker set for ${screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}!`)
   }
 
   return (
@@ -539,6 +751,53 @@ function App() {
             </TabsContent>
           </TabsContent>
           <TabsContent value="Layout">
+            {/* Screen Selection */}
+            <div className="mb-6">
+              <div className="font-semibold mb-3 text-lg">Screen Selection</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Preview Screen Selector */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Preview Screen:</label>
+                  <Select
+                    value={selectedScreen?.id || ''}
+                    onValueChange={handleScreenSelection}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select screen for preview" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {screens.map((screen) => (
+                        <SelectItem key={screen.id} value={screen.id}>
+                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`} 
+                          ({screen.bounds.width}x{screen.bounds.height})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Multi-Screen Display */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Display on Screens:</label>
+                  <div className="space-y-2">
+                    {screens.map((screen) => (
+                      <label key={screen.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedScreens.includes(screen.id)}
+                          onChange={(e) => handleMultiScreenSelection(screen.id, e.target.checked)}
+                          className="accent-pink-600"
+                        />
+                        <span className="text-sm">
+                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-4 flex-wrap mb-8">
               {stickers.length === 0 && <div>No stickers yet.</div>}
               {stickers.map((sticker, i) => (
@@ -566,7 +825,7 @@ function App() {
                     <Button
                       size="sm"
                       className="h-6 px-2 text-xs bg-pink-600 text-white hover:bg-pink-700"
-                      onClick={() => handleSetSticker(sticker)}
+                      onClick={() => handleSetStickerForScreen(sticker, selectedScreen.id)}
                     >
                       Set
                     </Button>
@@ -583,12 +842,11 @@ function App() {
             </div>
             <div className="w-full flex justify-center mb-2">
               <div className="inline-block text-muted-foreground/80 text-md px-3 py-1 rounded-full border bg-card/70 border-card shadow-sm">
-                Screen Preview
+                Screen Preview - {selectedScreen?.primary ? 'Primary Display' : `Display ${selectedScreen?.index + 1}`} ({selectedScreen?.bounds.width}x{selectedScreen?.bounds.height})
               </div>
             </div>
-            {activeSticker && (
+            {activeSticker && selectedScreen && (
               <>
-                
                 {/* Sticker preview and Rnd */}
                 <div
                   className="relative mx-auto p-2 rounded-xl border bg-card/60 backdrop-blur-md shadow-lg"
@@ -600,13 +858,24 @@ function App() {
                   }}
                 >
                   <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ width: previewWidth, height: previewHeight }}>
-                    <canvas
-                      ref={handleCanvasRef}
-                      width={previewWidth}
-                      height={previewHeight}
-                      className="absolute top-0 left-0 w-full h-full z-0 rounded-lg"
-                    />
-                    <video ref={handleVideoRef} />
+                    {screenStream ? (
+                      <>
+                        <canvas
+                          ref={handleCanvasRef}
+                          width={previewWidth}
+                          height={previewHeight}
+                          className="absolute top-0 left-0 w-full h-full z-0 rounded-lg"
+                        />
+                        <video ref={handleVideoRef} />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted/50 rounded-lg">
+                        <div className="text-center text-muted-foreground">
+                          <div className="text-sm font-medium">Screen Preview Unavailable</div>
+                          <div className="text-xs">Check console for details</div>
+                        </div>
+                      </div>
+                    )}
                     <Rnd
                       className=''
                       size={{

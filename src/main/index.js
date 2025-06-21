@@ -9,23 +9,37 @@ const AutoLaunch = require('auto-launch')
 
 ipcMain.handle('DESKTOP_CAPTURER_GET_SOURCES', (e, opts) => desktopCapturer.getSources(opts))
 
-let stickerWindowRef = null
-function createWindows() {
-  const { width, height } = screen.getPrimaryDisplay().bounds
+let stickerWindows = new Map() // Map of screen ID to sticker window
+let managerWindow = null
 
+// Get all available screens
+function getAllScreens() {
+  const displays = screen.getAllDisplays()
+  return displays.map((display, index) => ({
+    id: display.id,
+    index,
+    bounds: display.bounds,
+    workArea: display.workArea,
+    scaleFactor: display.scaleFactor,
+    rotation: display.rotation,
+    internal: display.internal,
+    primary: display.id === screen.getPrimaryDisplay().id
+  }))
+}
+
+// Create sticker window for a specific screen
+function createStickerWindow(screenInfo) {
+  const { bounds, id } = screenInfo
+  
   const stickerWindow = new BrowserWindow({
-    x: 0,
-    y: 0,
-    width,
-    height,
-    // --- critical flags ---
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
     frame: false,
-    // transparent: true,
-    thickFrame: false, // windows only
-    // fullscreenable: false,      // avoid buggy compositor path
+    thickFrame: false,
     fullscreen: true,
     backgroundColor: '#00000000',
-    // --- behaviour flags you already had ---
     alwaysOnTop: true,
     resizable: false,
     skipTaskbar: true,
@@ -36,15 +50,29 @@ function createWindows() {
       webSecurity: false
     }
   })
-  stickerWindowRef = stickerWindow
 
   stickerWindow.setIgnoreMouseEvents(true, { forward: true })
   stickerWindow.setContentProtection(true)
+  
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    stickerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/sticker.html')
+  } else {
+    stickerWindow.loadFile(join(__dirname, '../renderer/sticker.html'))
+  }
+
+  // Store reference to this window
+  stickerWindows.set(id, stickerWindow)
+  
+  return stickerWindow
+}
+
+function createWindows() {
+  // Create manager window
   const iconPath = is.dev
     ? join(__dirname, '../../resources/icon.png')
     : join(__dirname, '../../build/icon.png')
 
-  const managerWindow = new BrowserWindow({
+  managerWindow = new BrowserWindow({
     width: 900,
     height: 670,
     frame: false,
@@ -64,37 +92,18 @@ function createWindows() {
   managerWindow.on('ready-to-show', () => {
     managerWindow.show()
   })
-  managerWindow.setContentProtection(true);
+  managerWindow.setContentProtection(true)
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    stickerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/sticker.html')
     managerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/index.html')
   } else {
-    stickerWindow.loadFile(join(__dirname, '../renderer/sticker.html'))
     managerWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  ipcMain.on('update-sticker-layout', (_, layout) => {
-    console.log('Main received layout update:', layout)
-    if (BrowserWindow.getAllWindows().length > 1) {
-      const stickerWindow = BrowserWindow.getAllWindows().find((win) => {
-        const webContents = win.webContents
-        try {
-          return win !== managerWindow
-        } catch (e) {
-          return false
-        }
-      })
-
-      if (stickerWindow && !stickerWindow.isDestroyed()) {
-        console.log('Main forwarding layout update to sticker window')
-        stickerWindow.webContents.send('update-sticker-layout', layout)
-      } else {
-        console.error('Sticker window not found or destroyed')
-      }
-    } else {
-      console.error('No other windows open to send layout to')
-    }
+  // Create sticker windows for all screens
+  const screens = getAllScreens()
+  screens.forEach(screenInfo => {
+    createStickerWindow(screenInfo)
   })
 
   // stickerWindow.webContents.openDevTools();
@@ -228,10 +237,60 @@ ipcMain.handle('window-close', () => {
 })
 
 ipcMain.handle('set-sticker-content-protection', (_, value) => {
-  if (stickerWindowRef && !stickerWindowRef.isDestroyed()) {
-    stickerWindowRef.setContentProtection(!!value)
-    console.log('Set sticker content protection to:', !!value)
-    return true
+  stickerWindows.forEach((stickerWindow) => {
+    if (stickerWindow && !stickerWindow.isDestroyed()) {
+      stickerWindow.setContentProtection(!!value)
+      console.log('Set sticker content protection to:', !!value)
+    }
+  })
+  return true
+})
+
+ipcMain.on('update-sticker-layout', (_, layout) => {
+  console.log('Main received layout update:', layout)
+  
+  // Send to all sticker windows or specific screen if specified
+  const targetScreenId = layout.screenId
+  const windowsToUpdate = targetScreenId 
+    ? [stickerWindows.get(targetScreenId)].filter(Boolean)
+    : Array.from(stickerWindows.values())
+
+  windowsToUpdate.forEach(stickerWindow => {
+    if (stickerWindow && !stickerWindow.isDestroyed()) {
+      console.log('Main forwarding layout update to sticker window')
+      stickerWindow.webContents.send('update-sticker-layout', layout)
+    }
+  })
+})
+
+ipcMain.handle('get-all-screens', () => {
+  return getAllScreens()
+})
+
+ipcMain.handle('get-screen-info', (_, screenId) => {
+  const screens = getAllScreens()
+  return screens.find(screen => screen.id === screenId) || screens[0]
+})
+
+ipcMain.handle('get-primary-screen-source-id', async (_, screenId) => {
+  try {
+    const sources = await desktopCapturer.getSources({ types: ['screen'] })
+    
+    if (screenId) {
+      // Find source for specific screen
+      const screenSources = sources.filter(source => 
+        source.display_id === screenId.toString()
+      )
+      if (screenSources.length > 0) {
+        return screenSources[0].id
+      }
+    }
+    
+    // Fallback to primary screen
+    if (!sources?.length) throw new Error('No screen sources found')
+    return sources[0].id
+  } catch (err) {
+    console.error('getPrimaryScreenSourceId failed:', err)
+    throw err
   }
-  return false
 })
