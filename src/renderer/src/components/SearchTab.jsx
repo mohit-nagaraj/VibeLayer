@@ -13,15 +13,47 @@ const SearchTab = ({ loading, results, onSearch, onImport, onImportUrl, onImport
   const [importUrl, setImportUrl] = useState('')
   const [imgError, setImgError] = useState(false)
   const searchRef = useRef()
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleFileSelect = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setLocalFile(file)
+      setLocalPreview(URL.createObjectURL(file))
+    } else {
+      setLocalFile(null)
+      setLocalPreview(null)
+      // Note: Consider showing a toast for invalid file types in the future.
+    }
+  }
+
+  const handleDragEnter = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    handleFileSelect(file)
+  }
 
   const handleImportLocal = (e) => {
     const file = e.target.files[0]
-    setLocalFile(file || null)
-    if (file) {
-      setLocalPreview(URL.createObjectURL(file))
-    } else {
-      setLocalPreview(null)
-    }
+    handleFileSelect(file)
   }
 
   const handleImportLocalButton = async () => {
@@ -64,8 +96,18 @@ const SearchTab = ({ loading, results, onSearch, onImport, onImportUrl, onImport
               </Button>
             ) : null}
           </div>
-          <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
-            <Label htmlFor="local-file" className="cursor-pointer">
+          <div
+            className={`w-full min-h-48 border border-dashed rounded-md flex flex-col items-center justify-center p-6 transition-colors ${
+              isDragging
+                ? 'border-pink-600 bg-pink-600/10'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            <Label htmlFor="local-file" className="cursor-pointer text-center">
               Choose file... <span className="text-sm text-muted-foreground">or Drag n Drop</span>
             </Label>
             <Input

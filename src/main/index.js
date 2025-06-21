@@ -40,7 +40,7 @@ function createStickerWindow(screenInfo) {
     thickFrame: false,
     fullscreen: true,
     backgroundColor: '#00000000',
-    transparent: true,
+    // transparent: true,
     alwaysOnTop: true,
     resizable: false,
     skipTaskbar: true,
