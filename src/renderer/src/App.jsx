@@ -639,10 +639,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen w-full p-6 bg-background text-foreground grid grid-cols-1 relative overflow-hidden">
+    <div className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden">
       <CustomTitleBar title="VibeLayer" theme={settings.theme} />
       <DotPattern className="[mask-image:radial-gradient(300px_circle_at_center,white,transparent)]" />
-      <div className="relative z-10 pt-10">
+      <div className="relative z-10 flex-1 overflow-y-auto p-6 pt-10">
         <Tabs value={tab} onValueChange={setTab} className="mb-6">
           <TabsList>
             {TABS.map((t) => (
@@ -754,7 +754,7 @@ function App() {
             {/* Screen Selection */}
             <div className="mb-6">
               <div className="font-semibold mb-3 text-lg">Screen Selection</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Preview Screen Selector */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Preview Screen:</label>
@@ -779,7 +779,7 @@ function App() {
                 {/* Multi-Screen Display */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Display on Screens:</label>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
                     {screens.map((screen) => (
                       <label key={screen.id} className="flex items-center space-x-2">
                         <input
@@ -851,19 +851,22 @@ function App() {
                 <div
                   className="relative mx-auto p-2 rounded-xl border bg-card/60 backdrop-blur-md shadow-lg"
                   style={{
-                    width: previewWidth + 2,
-                    height: previewHeight + 2,
+                    width: Math.min(previewWidth + 2, window.innerWidth - 48),
+                    height: Math.min(previewHeight + 2, window.innerHeight - 400),
                     overflow: 'hidden',
                     boxSizing: 'content-box'
                   }}
                 >
-                  <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ width: previewWidth, height: previewHeight }}>
+                  <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ 
+                    width: Math.min(previewWidth, window.innerWidth - 52), 
+                    height: Math.min(previewHeight, window.innerHeight - 404) 
+                  }}>
                     {screenStream ? (
                       <>
                         <canvas
                           ref={handleCanvasRef}
-                          width={previewWidth}
-                          height={previewHeight}
+                          width={Math.min(previewWidth, window.innerWidth - 52)}
+                          height={Math.min(previewHeight, window.innerHeight - 404)}
                           className="absolute top-0 left-0 w-full h-full z-0 rounded-lg"
                         />
                         <video ref={handleVideoRef} />
@@ -879,19 +882,19 @@ function App() {
                     <Rnd
                       className=''
                       size={{
-                        width: layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                        height: layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                        width: layout.widthPct ? layout.widthPct * Math.min(previewWidth, window.innerWidth - 52) : layout.width,
+                        height: layout.heightPct ? layout.heightPct * Math.min(previewHeight, window.innerHeight - 404) : layout.height
                       }}
                       position={{
-                        x: layout.xPct ? layout.xPct * previewWidth : layout.x,
-                        y: layout.yPct ? layout.yPct * previewHeight : layout.y
+                        x: layout.xPct ? layout.xPct * Math.min(previewWidth, window.innerWidth - 52) : layout.x,
+                        y: layout.yPct ? layout.yPct * Math.min(previewHeight, window.innerHeight - 404) : layout.y
                       }}
                       onDragStop={(e, d) =>
                         handleLayoutChange(
                           d.x,
                           d.y,
-                          layout.widthPct ? layout.widthPct * previewWidth : layout.width,
-                          layout.heightPct ? layout.heightPct * previewHeight : layout.height
+                          layout.widthPct ? layout.widthPct * Math.min(previewWidth, window.innerWidth - 52) : layout.width,
+                          layout.heightPct ? layout.heightPct * Math.min(previewHeight, window.innerHeight - 404) : layout.height
                         )
                       }
                       onResizeStop={(e, dir, ref, delta, pos) => {
@@ -918,13 +921,13 @@ function App() {
                   </div>
                 </div>
                 {/* Toolbar for width/height and aspect lock */}
-                <div className="flex mt-4 items-center gap-4 mb-2 justify-center">
+                <div className="flex mt-4 items-center gap-4 mb-2 justify-center flex-wrap">
                   <label className="flex items-center gap-1 text-sm">
                     W(px) :
                     <input
                       type="number"
                       min={24}
-                      max={previewWidth}
+                      max={Math.min(previewWidth, window.innerWidth - 52)}
                       value={toolbarSize.width}
                       onChange={e => handleToolbarSizeChange('width', e.target.value)}
                       className="w-16 px-2 py-1 border rounded text-sm bg-card"
@@ -936,7 +939,7 @@ function App() {
                     <input
                       type="number"
                       min={24}
-                      max={previewHeight}
+                      max={Math.min(previewHeight, window.innerHeight - 404)}
                       value={toolbarSize.height}
                       onChange={e => handleToolbarSizeChange('height', e.target.value)}
                       className="w-16 px-2 py-1 border rounded text-sm bg-card"

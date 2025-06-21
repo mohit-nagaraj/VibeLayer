@@ -174,20 +174,21 @@ code {
 
 #root {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   flex-direction: column;
-  margin-bottom: 80px;
   width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body[style*='background: transparent;'] #root {
-  display: block !important;
+  display: flex !important;
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
-  margin-bottom: 0 !important;
 }
 
 .logo {
@@ -257,7 +258,7 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   appearance: textfield;
   outline: none;
-  
+
   -moz-appearance: textfield;
 }
 .action a {
@@ -479,4 +480,63 @@ input[type=number] {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.3);
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.5);
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Hide scrollbar buttons */
+::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+/* Dark theme scrollbar adjustments */
+.dark ::-webkit-scrollbar-track {
+  border-color: rgba(75, 85, 99, 0.3);
+  border-radius: 12px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.25);
+  border-radius: 12px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.4);
+  border-radius: 12px;
+}
+
+/* Firefox scrollbar styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 72, 153, 0.3) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(236, 72, 153, 0.25) transparent;
 }
