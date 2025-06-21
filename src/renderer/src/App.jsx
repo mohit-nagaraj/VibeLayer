@@ -5,12 +5,13 @@ import CustomTitleBar from './components/CustomTitleBar'
 import SearchTab from './components/SearchTab'
 import LayoutTab from './components/LayoutTab'
 import SettingsTab from './components/SettingsTab'
+import MusicTab from './components/MusicTab'
 import { toFileUrl } from './utils/fileUtils'
 import { useStickerManagement } from './hooks/useStickerManagement'
 import { useScreenManagement } from './hooks/useScreenManagement'
 import { useSettings } from './hooks/useSettings'
 
-const TABS = ['Search', 'Layout', 'Settings']
+const TABS = ['Search', 'Layout', 'Settings', 'Music']
 
 function App() {
   const [tab, setTab] = useState('Search')
@@ -275,6 +276,9 @@ function App() {
               onSettingsChange={handleSettingsChangeWithToast}
               onAutoLaunchChange={handleAutoLaunchChangeWithToast}
             />
+          </TabsContent>
+          <TabsContent value="Music">
+            <MusicTab />
           </TabsContent>
         </Tabs>
 
