@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toFileUrl } from '../utils/fileUtils'
+import { useImageAspectRatio } from './useImageAspectRatio'
 
 export const useScreenManagement = () => {
   const [screens, setScreens] = useState([])
@@ -138,7 +139,7 @@ export const useScreenManagement = () => {
     return updatedScreenLayouts
   }
 
-  const setStickerForScreen = (sticker, screenId) => {
+  const setStickerForScreen = (sticker, screenId, options = {}) => {
     const screen = screens.find((s) => s.id === screenId)
     if (!screen) return null
 
@@ -151,11 +152,36 @@ export const useScreenManagement = () => {
       sticker: null
     }
 
-    const newLayout = {
+    let newLayout = {
       ...currentLayout,
       sticker: sticker,
       stickerUrl,
       screenId: screenId
+    }
+
+    if (options.aspectRatio) {
+      const previewScale = 0.25
+      const previewWidth = Math.round(screen.bounds.width * previewScale)
+      const previewHeight = Math.round(screen.bounds.height * previewScale)
+
+      const maxWidth = previewWidth * 0.5
+      const maxHeight = previewHeight * 0.5
+
+      let newWidth = maxWidth
+      let newHeight = newWidth / options.aspectRatio
+
+      if (newHeight > maxHeight) {
+        newHeight = maxHeight
+        newWidth = newHeight * options.aspectRatio
+      }
+
+      newLayout = {
+        ...newLayout,
+        width: newWidth,
+        height: newHeight,
+        widthPct: newWidth / previewWidth,
+        heightPct: newHeight / previewHeight
+      }
     }
 
     // Update screen layouts

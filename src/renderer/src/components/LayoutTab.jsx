@@ -5,6 +5,7 @@ import { Input } from './ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select'
 import { Trash } from 'lucide-react'
 import { toFileUrl } from '../utils/fileUtils'
+import { useImageAspectRatio } from '../hooks/useImageAspectRatio'
 
 const LayoutTab = ({
   activeSticker,
@@ -26,6 +27,8 @@ const LayoutTab = ({
   const [toolbarSize, setToolbarSize] = useState({ width: 200, height: 200 })
   const [sizeDialogOpen, setSizeDialogOpen] = useState(false)
   const [tempSize, setTempSize] = useState({ width: '', height: '' })
+  const [selectedSticker, setSelectedSticker] = useState(null)
+  const aspectRatio = useImageAspectRatio(selectedSticker)
 
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -161,6 +164,13 @@ const LayoutTab = ({
       }
     }
   }, [sizeDialogOpen, tempSize.width, tempSize.height])
+
+  useEffect(() => {
+    if (aspectRatio && selectedSticker && selectedScreen) {
+      onSetStickerForScreen(selectedSticker, selectedScreen.id, { aspectRatio })
+      setSelectedSticker(null)
+    }
+  }, [aspectRatio, selectedSticker, selectedScreen, onSetStickerForScreen])
 
   return (
     <div className="space-y-6">
@@ -403,7 +413,7 @@ const LayoutTab = ({
               <Button
                 size="sm"
                 className="h-6 px-2 text-xs bg-pink-600 text-white hover:bg-pink-700"
-                onClick={() => onSetStickerForScreen(sticker, selectedScreen.id)}
+                onClick={() => setSelectedSticker(sticker)}
               >
                 Set
               </Button>

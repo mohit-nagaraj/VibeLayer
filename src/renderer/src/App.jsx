@@ -140,8 +140,8 @@ function App() {
   }
 
   // Set sticker for specific screen
-  const handleSetStickerForScreen = (sticker, screenId) => {
-    const result = setStickerForScreen(sticker, screenId)
+  const handleSetStickerForScreen = (sticker, screenId, options) => {
+    const result = setStickerForScreen(sticker, screenId, options)
     if (result) {
       // If this is the currently selected screen, update the main layout
       if (selectedScreen?.id === screenId) {

@@ -2,6 +2,8 @@ import { Switch } from './ui/switch'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select'
 
 const SettingsTab = ({ settings, autoLaunch, onSettingsChange, onAutoLaunchChange }) => {
+  const currentYear = new Date().getFullYear()
+
   return (
     <div className="w-full flex flex-col gap-4">
       {/* Always on top */}
@@ -58,6 +60,11 @@ const SettingsTab = ({ settings, autoLaunch, onSettingsChange, onAutoLaunchChang
             <SelectItem value="light">Light</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Footer */}
+      <div className="text-sm text-muted-foreground">
+        Made with ♥ by Momo © {currentYear}
       </div>
     </div>
   )
