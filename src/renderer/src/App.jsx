@@ -608,7 +608,7 @@ function App() {
         newHeight = Math.round(width / aspect);
       }
     }
-    const safePadding = 0.01; // px, adjust as needed
+    const safePadding = 0.001; // px, adjust as needed
     const maxX = previewWidth - newWidth - safePadding;
     const maxY = previewHeight - newHeight - safePadding;
     const clampedX = Math.max(safePadding, Math.min(x, maxX));
