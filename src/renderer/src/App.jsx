@@ -67,6 +67,10 @@ function App() {
   const [aspectLock, setAspectLock] = useState(true);
   const [toolbarSize, setToolbarSize] = useState({ width: 200, height: 200 });
   
+  // Dialog state for size editing
+  const [sizeDialogOpen, setSizeDialogOpen] = useState(false);
+  const [tempSize, setTempSize] = useState({ width: '', height: '' });
+  
   // Multi-screen support
   const [screens, setScreens] = useState([])
   const [selectedScreen, setSelectedScreen] = useState(null)
@@ -496,22 +500,100 @@ function App() {
     let newWidth = toolbarSize.width;
     let newHeight = toolbarSize.height;
     const aspect = getAspectRatio();
-    if (field === 'width') {
-      newWidth = Math.max(24, Math.min(Number(value), previewWidth));
-      newHeight = aspectLock ? Math.round(newWidth / aspect) : toolbarSize.height;
+    
+    // Handle empty value - don't apply constraints when clearing
+    if (value === '') {
+      if (field === 'width') {
+        newWidth = 0;
+        newHeight = aspectLock ? 0 : toolbarSize.height;
+      } else {
+        newHeight = 0;
+        newWidth = aspectLock ? 0 : toolbarSize.width;
+      }
     } else {
-      newHeight = Math.max(24, Math.min(Number(value), previewHeight));
-      newWidth = aspectLock ? Math.round(newHeight * aspect) : toolbarSize.width;
+      // Apply constraints only for non-empty values
+      const numValue = Number(value);
+      if (field === 'width') {
+        newWidth = Math.max(24, Math.min(numValue, previewWidth));
+        newHeight = aspectLock ? Math.round(newWidth / aspect) : toolbarSize.height;
+      } else {
+        newHeight = Math.max(24, Math.min(numValue, previewHeight));
+        newWidth = aspectLock ? Math.round(newHeight * aspect) : toolbarSize.width;
+      }
     }
+    
     setToolbarSize({ width: newWidth, height: newHeight });
-    // Immediately update layout
+    
+    // Only update layout if we have valid values
+    if (newWidth > 0 && newHeight > 0) {
+      handleLayoutChange(
+        layout.xPct ? layout.xPct * previewWidth : layout.x,
+        layout.yPct ? layout.yPct * previewHeight : layout.y,
+        newWidth,
+        newHeight
+      );
+    }
+  };
+
+  // Dialog handlers for size editing
+  const openSizeDialog = () => {
+    setTempSize({
+      width: toolbarSize.width.toString(),
+      height: toolbarSize.height.toString()
+    });
+    setSizeDialogOpen(true);
+  };
+
+  const closeSizeDialog = () => {
+    setSizeDialogOpen(false);
+    setTempSize({ width: '', height: '' });
+  };
+
+  const applySizeDialog = () => {
+    const newWidth = Math.max(24, Math.min(Number(tempSize.width), previewWidth));
+    const newHeight = Math.max(24, Math.min(Number(tempSize.height), previewHeight));
+    
+    setToolbarSize({ width: newWidth, height: newHeight });
+    
+    // Update layout with new size
     handleLayoutChange(
       layout.xPct ? layout.xPct * previewWidth : layout.x,
       layout.yPct ? layout.yPct * previewHeight : layout.y,
       newWidth,
       newHeight
     );
+    
+    closeSizeDialog();
+    showToast('Size updated!');
   };
+
+  const handleTempSizeChange = (field, value) => {
+    setTempSize(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle escape key to close dialog
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && sizeDialogOpen) {
+        closeSizeDialog();
+      }
+    };
+
+    const handleEnter = (e) => {
+      if (e.key === 'Enter' && sizeDialogOpen && tempSize.width && tempSize.height) {
+        applySizeDialog();
+      }
+    };
+
+    if (sizeDialogOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleEnter);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener('keydown', handleEnter);
+      };
+    }
+  }, [sizeDialogOpen, tempSize.width, tempSize.height]);
 
   // Modified handleLayoutChange to optionally preserve aspect ratio
   const handleLayoutChange = (x, y, width, height, forceAspect) => {
@@ -642,7 +724,7 @@ function App() {
     <div className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden">
       <CustomTitleBar title="VibeLayer" theme={settings.theme} />
       <DotPattern className="[mask-image:radial-gradient(300px_circle_at_center,white,transparent)]" />
-      <div className="relative z-10 flex-1 overflow-y-auto p-6 pt-10">
+      <div className="relative z-10 flex-1 overflow-y-auto p-6 pt-12">
         <Tabs value={tab} onValueChange={setTab} className="mb-6">
           <TabsList>
             {TABS.map((t) => (
@@ -751,96 +833,7 @@ function App() {
             </TabsContent>
           </TabsContent>
           <TabsContent value="Layout">
-            {/* Screen Selection */}
-            <div className="mb-6">
-              <div className="font-semibold mb-3 text-lg">Screen Selection</div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Preview Screen Selector */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Preview Screen:</label>
-                  <Select
-                    value={selectedScreen?.id || ''}
-                    onValueChange={handleScreenSelection}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select screen for preview" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {screens.map((screen) => (
-                        <SelectItem key={screen.id} value={screen.id}>
-                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`} 
-                          ({screen.bounds.width}x{screen.bounds.height})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Multi-Screen Display */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Display on Screens:</label>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {screens.map((screen) => (
-                      <label key={screen.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedScreens.includes(screen.id)}
-                          onChange={(e) => handleMultiScreenSelection(screen.id, e.target.checked)}
-                          className="accent-pink-600"
-                        />
-                        <span className="text-sm">
-                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 flex-wrap mb-8">
-              {stickers.length === 0 && <div>No stickers yet.</div>}
-              {stickers.map((sticker, i) => (
-                <div key={i} className="bg-muted p-2 px-[30px] pb-[36px] rounded-lg flex flex-col items-center relative group">
-                  <img
-                    src={toFileUrl(sticker.path)}
-                    alt="sticker"
-                    className="w-24 h-24 rounded-lg mb-[2px]"
-                  />
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleDelete(sticker)}
-                    className="absolute top-1 right-1 bg-transparent opacity-0 group-hover:opacity-100 duration-300 transition-opacity z-10"
-                    aria-label="Delete"
-                  >
-                    <Trash className="w-2 h-2 text-red-500" />
-                  </Button>
-                  <div
-                    className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-400 group-hover:opacity-0"
-                  >
-                    {`Sticker ${i + 1}`}
-                  </div>
-                  <div className="flex gap-2 absolute bottom-[6px] opacity-0 duration-400 group-hover:opacity-100">
-                    <Button
-                      size="sm"
-                      className="h-6 px-2 text-xs bg-pink-600 text-white hover:bg-pink-700"
-                      onClick={() => handleSetStickerForScreen(sticker, selectedScreen.id)}
-                    >
-                      Set
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-6 px-2 text-xs bg-primary"
-                      onClick={() => handleRemoveBg(sticker)}
-                    >
-                      Remove BG
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="w-full flex justify-center mb-2">
+          <div className="w-full flex justify-center mb-2">
               <div className="inline-block text-muted-foreground/80 text-md px-3 py-1 rounded-full border bg-card/70 border-card shadow-sm">
                 Screen Preview - {selectedScreen?.primary ? 'Primary Display' : `Display ${selectedScreen?.index + 1}`} ({selectedScreen?.bounds.width}x{selectedScreen?.bounds.height})
               </div>
@@ -922,30 +915,13 @@ function App() {
                 </div>
                 {/* Toolbar for width/height and aspect lock */}
                 <div className="flex mt-4 items-center gap-4 mb-2 justify-center flex-wrap">
-                  <label className="flex items-center gap-1 text-sm">
-                    W(px) :
-                    <input
-                      type="number"
-                      min={24}
-                      max={Math.min(previewWidth, window.innerWidth - 52)}
-                      value={toolbarSize.width}
-                      onChange={e => handleToolbarSizeChange('width', e.target.value)}
-                      className="w-16 px-2 py-1 border rounded text-sm bg-card"
-                    />
-                    
-                  </label>
-                  <label className="flex items-center gap-1 text-sm">
-                    H(px) :
-                    <input
-                      type="number"
-                      min={24}
-                      max={Math.min(previewHeight, window.innerHeight - 404)}
-                      value={toolbarSize.height}
-                      onChange={e => handleToolbarSizeChange('height', e.target.value)}
-                      className="w-16 px-2 py-1 border rounded text-sm bg-card"
-                    />
-                    
-                  </label>
+                  <Button
+                    onClick={openSizeDialog}
+                    className="bg-pink-600 text-white hover:bg-pink-700"
+                    size="sm"
+                  >
+                    Set Size
+                  </Button>
                   <label className="flex items-center gap-1 text-sm">
                     <input
                       type="checkbox"
@@ -956,8 +932,147 @@ function App() {
                     Lock aspect ratio
                   </label>
                 </div>
+
+                {/* Size Dialog */}
+                {sizeDialogOpen && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeSizeDialog}>
+                    <div className="bg-card border rounded-lg p-6 w-80 max-w-sm" onClick={(e) => e.stopPropagation()}>
+                      <h3 className="text-lg font-semibold mb-4">Set Sticker Size</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Width (px)</label>
+                          <Input
+                            type="number"
+                            min={24}
+                            max={Math.min(previewWidth, window.innerWidth - 52)}
+                            value={tempSize.width}
+                            onChange={e => handleTempSizeChange('width', e.target.value)}
+                            placeholder="Enter width"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Height (px)</label>
+                          <Input
+                            type="number"
+                            min={24}
+                            max={Math.min(previewHeight, window.innerHeight - 404)}
+                            value={tempSize.height}
+                            onChange={e => handleTempSizeChange('height', e.target.value)}
+                            placeholder="Enter height"
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            onClick={applySizeDialog}
+                            className="flex-1 bg-pink-600 text-white hover:bg-pink-700"
+                            disabled={!tempSize.width || !tempSize.height}
+                          >
+                            Apply
+                          </Button>
+                          <Button
+                            onClick={closeSizeDialog}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
+            {/* Screen Selection */}
+            <div className="mb-6">
+              {/* <div className="font-semibold mb-3 text-lg">Screen Selection</div> */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Preview Screen Selector */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Preview Screen:</label>
+                  <Select
+                    value={selectedScreen?.id || ''}
+                    onValueChange={handleScreenSelection}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select screen for preview" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {screens.map((screen) => (
+                        <SelectItem key={screen.id} value={screen.id}>
+                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`} 
+                          ({screen.bounds.width}x{screen.bounds.height})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Multi-Screen Display */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Display on Screens:</label>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {screens.map((screen) => (
+                      <label key={screen.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedScreens.includes(screen.id)}
+                          onChange={(e) => handleMultiScreenSelection(screen.id, e.target.checked)}
+                          className="accent-pink-600"
+                        />
+                        <span className="text-sm">
+                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="font-semibold mb-3 text-lg mt-4">Stickers</div>
+            <div className="flex gap-4 flex-wrap mb-8">
+              {stickers.length === 0 && <div>No stickers yet.</div>}
+              {stickers.map((sticker, i) => (
+                <div key={i} className="bg-muted p-2 px-[30px] pb-[36px] rounded-lg flex flex-col items-center relative group">
+                  <img
+                    src={toFileUrl(sticker.path)}
+                    alt="sticker"
+                    className="w-24 h-24 rounded-lg mb-[2px]"
+                  />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => handleDelete(sticker)}
+                    className="absolute top-1 right-1 bg-transparent opacity-0 group-hover:opacity-100 duration-300 transition-opacity z-10"
+                    aria-label="Delete"
+                  >
+                    <Trash className="w-2 h-2 text-red-500" />
+                  </Button>
+                  <div
+                    className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-400 group-hover:opacity-0"
+                  >
+                    {`Sticker ${i + 1}`}
+                  </div>
+                  <div className="flex gap-2 absolute bottom-[6px] opacity-0 duration-400 group-hover:opacity-100">
+                    <Button
+                      size="sm"
+                      className="h-6 px-2 text-xs bg-pink-600 text-white hover:bg-pink-700"
+                      onClick={() => handleSetStickerForScreen(sticker, selectedScreen.id)}
+                    >
+                      Set
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-6 px-2 text-xs bg-primary"
+                      onClick={() => handleRemoveBg(sticker)}
+                    >
+                      Remove BG
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
           </TabsContent>
           <TabsContent value="Settings">
             <div className="w-full flex flex-col gap-4">
