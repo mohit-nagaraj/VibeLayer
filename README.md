@@ -1,9 +1,9 @@
 ![Build Status](https://img.shields.io/github/actions/workflow/status/mohit-nagaraj/VibeLayer/build-ubuntu.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/a4939d005a0c4d6ebf71f610292a3842)](https://app.codacy.com/gh/mohit-nagaraj/VibeLayer/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-# ✨ VibeLayer: Your Adorable Desktop Companion! 🐾 
+# ✨ VibeLayer: Your Adorable Desktop Companion! 🐾
 
-> **Let your desktop vibe with you!** 
+> **Let your desktop vibe with you!**
 
 ![preview](https://github.com/user-attachments/assets/ce5bb19f-8848-4b9e-9134-ac4d8463cefd)
 
@@ -29,10 +29,9 @@ VibeLayer is not just another app - it's your _adorable_, always-on-top, see-thr
 - **🔒 Privacy First:** Stickers and settings are stored _locally_. No cloud, no snooping.
 - **💻 Cross-Platform:** Windows, macOS, Linux - everyone gets to vibe!
 
-
 ## 🖼️ Screenshots
 
-*Yet to come*
+_Yet to come_
 
 ## 🚀 Getting Started
 
@@ -127,4 +126,4 @@ yarn build:linux
 
 ---
 
-> **VibeLayer**  -  Because your desktop deserves a little _personality_!
+> **VibeLayer** - Because your desktop deserves a little _personality_!

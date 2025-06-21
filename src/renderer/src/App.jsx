@@ -18,8 +18,8 @@ import CustomTitleBar from './components/CustomTitleBar'
 import { SearchIcon } from 'lucide-react'
 import { Label } from './components/ui/label'
 import { Card } from './components/ui/card'
-import internetImg from './assets/internet.png';
-import downloadImg from './assets/download.png';
+import internetImg from './assets/internet.png'
+import downloadImg from './assets/download.png'
 import { Trash } from 'lucide-react'
 import { Switch } from './components/ui/switch'
 
@@ -63,14 +63,14 @@ function App() {
   const canvasRef = useRef(null)
   const [importUrl, setImportUrl] = useState('')
   const [imgError, setImgError] = useState(false)
-  const searchRef = useRef();
-  const [aspectLock, setAspectLock] = useState(true);
-  const [toolbarSize, setToolbarSize] = useState({ width: 200, height: 200 });
-  
+  const searchRef = useRef()
+  const [aspectLock, setAspectLock] = useState(true)
+  const [toolbarSize, setToolbarSize] = useState({ width: 200, height: 200 })
+
   // Dialog state for size editing
-  const [sizeDialogOpen, setSizeDialogOpen] = useState(false);
-  const [tempSize, setTempSize] = useState({ width: '', height: '' });
-  
+  const [sizeDialogOpen, setSizeDialogOpen] = useState(false)
+  const [tempSize, setTempSize] = useState({ width: '', height: '' })
+
   // Multi-screen support
   const [screens, setScreens] = useState([])
   const [selectedScreen, setSelectedScreen] = useState(null)
@@ -86,7 +86,7 @@ function App() {
   useEffect(() => {
     loadSettings()
   }, [])
-  
+
   // Load screens on mount
   useEffect(() => {
     const loadScreens = async () => {
@@ -99,7 +99,7 @@ function App() {
           setSelectedScreens([allScreens[0].id]) // Default to first screen
           // Initialize screen layouts
           const initialLayouts = {}
-          allScreens.forEach(screen => {
+          allScreens.forEach((screen) => {
             initialLayouts[screen.id] = { x: 100, y: 100, width: 200, height: 200, sticker: null }
           })
           setScreenLayouts(initialLayouts)
@@ -112,16 +112,22 @@ function App() {
   }, [])
 
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       // Get screen size for selected screen
       if (selectedScreen && window.electron?.getScreenInfo) {
-        setScreenSize({ 
-          width: selectedScreen.bounds.width, 
-          height: selectedScreen.bounds.height 
+        setScreenSize({
+          width: selectedScreen.bounds.width,
+          height: selectedScreen.bounds.height
         })
-        
+
         // Update layout to match selected screen
-        const screenLayout = screenLayouts[selectedScreen.id] || { x: 100, y: 100, width: 200, height: 200, sticker: null }
+        const screenLayout = screenLayouts[selectedScreen.id] || {
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 200,
+          sticker: null
+        }
         setLayout(screenLayout)
         setActiveSticker(screenLayout.sticker)
       }
@@ -134,7 +140,7 @@ function App() {
 
           // Stop existing stream if any
           if (screenStream) {
-            screenStream.getTracks().forEach(track => track.stop())
+            screenStream.getTracks().forEach((track) => track.stop())
             setScreenStream(null)
           }
 
@@ -157,10 +163,10 @@ function App() {
               }
             }
           })
-          
+
           console.log('Screen stream created successfully')
           setScreenStream(stream) // ← now a genuine MediaStream
-          
+
           // Reset video element with new stream
           if (videoRef.current) {
             videoRef.current.srcObject = stream
@@ -170,7 +176,7 @@ function App() {
         } catch (error) {
           console.error('Failed to get screen stream:', error)
           setScreenStream(null)
-          
+
           // Try fallback: get all sources and use the first one
           try {
             console.log('Trying fallback screen capture...')
@@ -191,7 +197,7 @@ function App() {
               })
               console.log('Fallback screen stream created successfully')
               setScreenStream(fallbackStream)
-              
+
               if (videoRef.current) {
                 videoRef.current.srcObject = fallbackStream
                 videoRef.current.muted = true
@@ -205,7 +211,7 @@ function App() {
       }
     })()
   }, [selectedScreen, screenLayouts])
-  
+
   useEffect(() => {
     // Set dark mode class on root for shadcn/tailwind
     document.documentElement.classList.toggle('dark', settings.theme === 'dark')
@@ -220,17 +226,17 @@ function App() {
       setToolbarSize({
         width: Math.round(layout.widthPct ? layout.widthPct * previewWidth : layout.width),
         height: Math.round(layout.heightPct ? layout.heightPct * previewHeight : layout.height)
-      });
+      })
     }
-  }, [activeSticker, layout, previewWidth, previewHeight]);
+  }, [activeSticker, layout, previewWidth, previewHeight])
 
   const initDrawingIfReady = useCallback(() => {
     // Make sure everything is ready
     if (!screenStream || !videoRef.current || !canvasRef.current) {
-      console.log('Drawing not ready:', { 
-        hasStream: !!screenStream, 
-        hasVideo: !!videoRef.current, 
-        hasCanvas: !!canvasRef.current 
+      console.log('Drawing not ready:', {
+        hasStream: !!screenStream,
+        hasVideo: !!videoRef.current,
+        hasCanvas: !!canvasRef.current
       })
       return
     }
@@ -272,27 +278,21 @@ function App() {
     }
   }, [screenStream, initDrawingIfReady])
 
-  const handleVideoRef = useCallback(
-    (node) => {
-      if (node) {
-        console.log('Video node is ready')
-        videoRef.current = node
-        // Don't call initDrawingIfReady here, let the useEffect handle it
-      }
-    },
-    []
-  )
+  const handleVideoRef = useCallback((node) => {
+    if (node) {
+      console.log('Video node is ready')
+      videoRef.current = node
+      // Don't call initDrawingIfReady here, let the useEffect handle it
+    }
+  }, [])
 
-  const handleCanvasRef = useCallback(
-    (node) => {
-      if (node) {
-        console.log('Canvas node is ready')
-        canvasRef.current = node
-        // Don't call initDrawingIfReady here, let the useEffect handle it
-      }
-    },
-    []
-  )
+  const handleCanvasRef = useCallback((node) => {
+    if (node) {
+      console.log('Canvas node is ready')
+      canvasRef.current = node
+      // Don't call initDrawingIfReady here, let the useEffect handle it
+    }
+  }, [])
 
   const showToast = (msg) => {
     setToast(msg)
@@ -459,26 +459,26 @@ function App() {
     setActiveSticker(sticker)
     // Use toFileUrl when sending to sticker window
     const stickerUrl = toFileUrl(sticker.path)
-    
+
     // Update layout for current screen
-    const newLayout = { 
-      ...l, 
-      sticker: sticker, 
+    const newLayout = {
+      ...l,
+      sticker: sticker,
       stickerUrl,
       screenId: selectedScreen?.id
     }
     setLayout(newLayout)
-    
+
     // Update screen layouts
     const updatedScreenLayouts = { ...screenLayouts }
     updatedScreenLayouts[selectedScreen.id] = newLayout
     setScreenLayouts(updatedScreenLayouts)
-    
+
     saveLayout(newLayout)
-    
+
     if (window.electron?.ipcRenderer) {
       // Send to all selected screens
-      selectedScreens.forEach(screenId => {
+      selectedScreens.forEach((screenId) => {
         const screenLayout = updatedScreenLayouts[screenId] || newLayout
         window.electron.ipcRenderer.send('update-sticker-layout', {
           ...screenLayout,
@@ -490,40 +490,40 @@ function App() {
   }
   // Helper to get aspect ratio
   const getAspectRatio = () => {
-    const w = layout.widthPct ? layout.widthPct * previewWidth : layout.width;
-    const h = layout.heightPct ? layout.heightPct * previewHeight : layout.height;
-    return w / h;
-  };
+    const w = layout.widthPct ? layout.widthPct * previewWidth : layout.width
+    const h = layout.heightPct ? layout.heightPct * previewHeight : layout.height
+    return w / h
+  }
 
   // Handler for toolbar input change
   const handleToolbarSizeChange = (field, value) => {
-    let newWidth = toolbarSize.width;
-    let newHeight = toolbarSize.height;
-    const aspect = getAspectRatio();
-    
+    let newWidth = toolbarSize.width
+    let newHeight = toolbarSize.height
+    const aspect = getAspectRatio()
+
     // Handle empty value - don't apply constraints when clearing
     if (value === '') {
       if (field === 'width') {
-        newWidth = 0;
-        newHeight = aspectLock ? 0 : toolbarSize.height;
+        newWidth = 0
+        newHeight = aspectLock ? 0 : toolbarSize.height
       } else {
-        newHeight = 0;
-        newWidth = aspectLock ? 0 : toolbarSize.width;
+        newHeight = 0
+        newWidth = aspectLock ? 0 : toolbarSize.width
       }
     } else {
       // Apply constraints only for non-empty values
-      const numValue = Number(value);
+      const numValue = Number(value)
       if (field === 'width') {
-        newWidth = Math.max(24, Math.min(numValue, previewWidth));
-        newHeight = aspectLock ? Math.round(newWidth / aspect) : toolbarSize.height;
+        newWidth = Math.max(24, Math.min(numValue, previewWidth))
+        newHeight = aspectLock ? Math.round(newWidth / aspect) : toolbarSize.height
       } else {
-        newHeight = Math.max(24, Math.min(numValue, previewHeight));
-        newWidth = aspectLock ? Math.round(newHeight * aspect) : toolbarSize.width;
+        newHeight = Math.max(24, Math.min(numValue, previewHeight))
+        newWidth = aspectLock ? Math.round(newHeight * aspect) : toolbarSize.width
       }
     }
-    
-    setToolbarSize({ width: newWidth, height: newHeight });
-    
+
+    setToolbarSize({ width: newWidth, height: newHeight })
+
     // Only update layout if we have valid values
     if (newWidth > 0 && newHeight > 0) {
       handleLayoutChange(
@@ -531,91 +531,91 @@ function App() {
         layout.yPct ? layout.yPct * previewHeight : layout.y,
         newWidth,
         newHeight
-      );
+      )
     }
-  };
+  }
 
   // Dialog handlers for size editing
   const openSizeDialog = () => {
     setTempSize({
       width: toolbarSize.width.toString(),
       height: toolbarSize.height.toString()
-    });
-    setSizeDialogOpen(true);
-  };
+    })
+    setSizeDialogOpen(true)
+  }
 
   const closeSizeDialog = () => {
-    setSizeDialogOpen(false);
-    setTempSize({ width: '', height: '' });
-  };
+    setSizeDialogOpen(false)
+    setTempSize({ width: '', height: '' })
+  }
 
   const applySizeDialog = () => {
-    const newWidth = Math.max(24, Math.min(Number(tempSize.width), previewWidth));
-    const newHeight = Math.max(24, Math.min(Number(tempSize.height), previewHeight));
-    
-    setToolbarSize({ width: newWidth, height: newHeight });
-    
+    const newWidth = Math.max(24, Math.min(Number(tempSize.width), previewWidth))
+    const newHeight = Math.max(24, Math.min(Number(tempSize.height), previewHeight))
+
+    setToolbarSize({ width: newWidth, height: newHeight })
+
     // Update layout with new size
     handleLayoutChange(
       layout.xPct ? layout.xPct * previewWidth : layout.x,
       layout.yPct ? layout.yPct * previewHeight : layout.y,
       newWidth,
       newHeight
-    );
-    
-    closeSizeDialog();
-    showToast('Size updated!');
-  };
+    )
+
+    closeSizeDialog()
+    showToast('Size updated!')
+  }
 
   const handleTempSizeChange = (field, value) => {
-    setTempSize(prev => ({ ...prev, [field]: value }));
-  };
+    setTempSize((prev) => ({ ...prev, [field]: value }))
+  }
 
   // Handle escape key to close dialog
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && sizeDialogOpen) {
-        closeSizeDialog();
+        closeSizeDialog()
       }
-    };
+    }
 
     const handleEnter = (e) => {
       if (e.key === 'Enter' && sizeDialogOpen && tempSize.width && tempSize.height) {
-        applySizeDialog();
+        applySizeDialog()
       }
-    };
+    }
 
     if (sizeDialogOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.addEventListener('keydown', handleEnter);
+      document.addEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', handleEnter)
       return () => {
-        document.removeEventListener('keydown', handleEscape);
-        document.removeEventListener('keydown', handleEnter);
-      };
+        document.removeEventListener('keydown', handleEscape)
+        document.removeEventListener('keydown', handleEnter)
+      }
     }
-  }, [sizeDialogOpen, tempSize.width, tempSize.height]);
+  }, [sizeDialogOpen, tempSize.width, tempSize.height])
 
   // Modified handleLayoutChange to optionally preserve aspect ratio
   const handleLayoutChange = (x, y, width, height, forceAspect) => {
-    const aspect = getAspectRatio();
-    let newWidth = width;
-    let newHeight = height;
+    const aspect = getAspectRatio()
+    let newWidth = width
+    let newHeight = height
     if (aspectLock || forceAspect) {
       // preserve aspect ratio
       if (width / height > aspect) {
-        newWidth = Math.round(height * aspect);
+        newWidth = Math.round(height * aspect)
       } else {
-        newHeight = Math.round(width / aspect);
+        newHeight = Math.round(width / aspect)
       }
     }
-    const safePadding = 0.001; // px, adjust as needed
-    const maxX = previewWidth - newWidth - safePadding;
-    const maxY = previewHeight - newHeight - safePadding;
-    const clampedX = Math.max(safePadding, Math.min(x, maxX));
-    const clampedY = Math.max(safePadding, Math.min(y, maxY));
-    const clampedWidth = Math.max(24, Math.min(newWidth, previewWidth - clampedX - safePadding));
-    const clampedHeight = Math.max(24, Math.min(newHeight, previewHeight - clampedY - safePadding));
-    
+    const safePadding = 0.001 // px, adjust as needed
+    const maxX = previewWidth - newWidth - safePadding
+    const maxY = previewHeight - newHeight - safePadding
+    const clampedX = Math.max(safePadding, Math.min(x, maxX))
+    const clampedY = Math.max(safePadding, Math.min(y, maxY))
+    const clampedWidth = Math.max(24, Math.min(newWidth, previewWidth - clampedX - safePadding))
+    const clampedHeight = Math.max(24, Math.min(newHeight, previewHeight - clampedY - safePadding))
+
     const newLayout = {
       ...layout,
       xPct: clampedX / previewWidth,
@@ -624,20 +624,20 @@ function App() {
       heightPct: clampedHeight / previewHeight,
       sticker: activeSticker,
       screenId: selectedScreen?.id
-    };
-    
-    setLayout(newLayout);
-    
+    }
+
+    setLayout(newLayout)
+
     // Update screen layouts
     const updatedScreenLayouts = { ...screenLayouts }
     updatedScreenLayouts[selectedScreen.id] = newLayout
     setScreenLayouts(updatedScreenLayouts)
-    
-    saveLayout(newLayout);
-    
+
+    saveLayout(newLayout)
+
     if (window.electron?.ipcRenderer) {
       // Send to all selected screens
-      selectedScreens.forEach(screenId => {
+      selectedScreens.forEach((screenId) => {
         const screenLayout = updatedScreenLayouts[screenId] || newLayout
         window.electron.ipcRenderer.send('update-sticker-layout', {
           ...screenLayout,
@@ -645,7 +645,7 @@ function App() {
         })
       })
     }
-  };
+  }
 
   // Settings
   const handleSettingsChange = async (field, value) => {
@@ -657,7 +657,7 @@ function App() {
 
   // Handle screen selection
   const handleScreenSelection = (screenId) => {
-    const screen = screens.find(s => s.id === screenId)
+    const screen = screens.find((s) => s.id === screenId)
     if (screen) {
       console.log('Selected screen:', screen)
       setSelectedScreen(screen)
@@ -667,9 +667,9 @@ function App() {
   // Handle multi-screen selection
   const handleMultiScreenSelection = (screenId, checked) => {
     console.log('Multi-screen selection:', screenId, checked)
-    
+
     if (checked) {
-      setSelectedScreens(prev => [...prev, screenId])
+      setSelectedScreens((prev) => [...prev, screenId])
     } else {
       // Remove sticker from unchecked screen
       if (window.electron?.ipcRenderer) {
@@ -679,36 +679,42 @@ function App() {
           screenId: screenId
         })
       }
-      setSelectedScreens(prev => prev.filter(id => id !== screenId))
+      setSelectedScreens((prev) => prev.filter((id) => id !== screenId))
     }
   }
 
   // Set sticker for specific screen
   const handleSetStickerForScreen = (sticker, screenId) => {
-    const screen = screens.find(s => s.id === screenId)
+    const screen = screens.find((s) => s.id === screenId)
     if (!screen) return
-    
+
     const stickerUrl = toFileUrl(sticker.path)
-    const currentLayout = screenLayouts[screenId] || { x: 100, y: 100, width: 200, height: 200, sticker: null }
-    
+    const currentLayout = screenLayouts[screenId] || {
+      x: 100,
+      y: 100,
+      width: 200,
+      height: 200,
+      sticker: null
+    }
+
     const newLayout = {
       ...currentLayout,
       sticker: sticker,
       stickerUrl,
       screenId: screenId
     }
-    
+
     // Update screen layouts
     const updatedScreenLayouts = { ...screenLayouts }
     updatedScreenLayouts[screenId] = newLayout
     setScreenLayouts(updatedScreenLayouts)
-    
+
     // If this is the currently selected screen, update the main layout
     if (selectedScreen?.id === screenId) {
       setLayout(newLayout)
       setActiveSticker(sticker)
     }
-    
+
     // Send to the specific screen
     if (window.electron?.ipcRenderer) {
       window.electron.ipcRenderer.send('update-sticker-layout', {
@@ -716,8 +722,10 @@ function App() {
         screenId
       })
     }
-    
-    showToast(`Sticker set for ${screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}!`)
+
+    showToast(
+      `Sticker set for ${screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}!`
+    )
   }
 
   return (
@@ -742,9 +750,17 @@ function App() {
                     <div className="w-full text-left font-semibold text-2xl">Local File</div>
                     {loading && localFile ? (
                       <div className="text-sm text-muted-foreground">Loading...</div>
-                    ) : (
-                      localPreview ? <Button size={"sm"} className={"ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer"} onClick={handleImportLocalButton}>Import</Button> : null
-                    )}
+                    ) : localPreview ? (
+                      <Button
+                        size={'sm'}
+                        className={
+                          'ml-auto bg-pink-600 text-white hover:bg-pink-700 cursor-pointer'
+                        }
+                        onClick={handleImportLocalButton}
+                      >
+                        Import
+                      </Button>
+                    ) : null}
                   </div>
                   <div className="w-full min-h-48 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center p-6">
                     <Label htmlFor="local-file" className="cursor-pointer ">
@@ -765,7 +781,6 @@ function App() {
                       className="w-24 h-24 object-cover rounded-md mt-4"
                       style={{ marginTop: '3px', marginBottom: '-15px' }}
                     />
-
                   </div>
                 </Card>
 
@@ -773,14 +788,22 @@ function App() {
                 <Card className="p-4 flex flex-col items-center justify-between gap-4">
                   <div className="flex w-full items-center justify-between gap-2">
                     <div className="w-full text-left font-semibold text-2xl">Direct Link</div>
-                    {importUrl && <Button className={"ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} size={"sm"} onClick={handleImportUrl}>Import</Button>}
-
+                    {importUrl && (
+                      <Button
+                        className={
+                          'ml-auto cursor-pointer bg-pink-600 text-white hover:bg-pink-700'
+                        }
+                        size={'sm'}
+                        onClick={handleImportUrl}
+                      >
+                        Import
+                      </Button>
+                    )}
                   </div>
                   <div className="w-full min-h-48 flex flex-col items-center">
-
                     <Input
                       value={importUrl}
-                      onChange={e => {
+                      onChange={(e) => {
                         setImportUrl(e.target.value)
                         setImgError(false)
                       }}
@@ -799,7 +822,7 @@ function App() {
 
               <div className="my-6" />
 
-              <div className="mt-10" style={{ marginTop: "16px" }}>
+              <div className="mt-10" style={{ marginTop: '16px' }}>
                 <div className="font-semibold mb-2 text-2xl">Search online</div>
                 <div className="flex items-center gap-2 mb-4">
                   <Input
@@ -807,12 +830,18 @@ function App() {
                     placeholder="Start typing keywords..."
                     className="backdrop-blur-xs"
                   />
-                  <Button className={"cursor-pointer bg-pink-600 text-white hover:bg-pink-700"} onClick={() => handleSearch(searchRef.current.value)} disabled={loading}>
+                  <Button
+                    className={'cursor-pointer bg-pink-600 text-white hover:bg-pink-700'}
+                    onClick={() => handleSearch(searchRef.current.value)}
+                    disabled={loading}
+                  >
                     <SearchIcon className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {loading && searchRef.current && searchRef.current.value ? <div>Loading...</div> : null}
+                {loading && searchRef.current && searchRef.current.value ? (
+                  <div>Loading...</div>
+                ) : null}
 
                 {/* Search Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
@@ -823,7 +852,11 @@ function App() {
                         alt="result"
                         className="w-24 h-24 object-cover rounded-md"
                       />
-                      <Button onClick={() => handleImport(item)} size="sm" className="mt-[2px] w-full bg-pink-600 text-white hover:bg-pink-700">
+                      <Button
+                        onClick={() => handleImport(item)}
+                        size="sm"
+                        className="mt-[2px] w-full bg-pink-600 text-white hover:bg-pink-700"
+                      >
                         Import
                       </Button>
                     </Card>
@@ -833,9 +866,13 @@ function App() {
             </TabsContent>
           </TabsContent>
           <TabsContent value="Layout">
-          <div className="w-full flex justify-center mb-2">
+            <div className="w-full flex justify-center mb-2">
               <div className="inline-block text-muted-foreground/80 text-md px-3 py-1 rounded-full border bg-card/70 border-card shadow-sm">
-                Screen Preview - {selectedScreen?.primary ? 'Primary Display' : `Display ${selectedScreen?.index + 1}`} ({selectedScreen?.bounds.width}x{selectedScreen?.bounds.height})
+                Screen Preview -{' '}
+                {selectedScreen?.primary
+                  ? 'Primary Display'
+                  : `Display ${selectedScreen?.index + 1}`}{' '}
+                ({selectedScreen?.bounds.width}x{selectedScreen?.bounds.height})
               </div>
             </div>
             {activeSticker && selectedScreen && (
@@ -850,10 +887,13 @@ function App() {
                     boxSizing: 'content-box'
                   }}
                 >
-                  <div className="relative w-full h-full rounded-lg overflow-hidden" style={{ 
-                    width: Math.min(previewWidth, window.innerWidth - 52), 
-                    height: Math.min(previewHeight, window.innerHeight - 404) 
-                  }}>
+                  <div
+                    className="relative w-full h-full rounded-lg overflow-hidden"
+                    style={{
+                      width: Math.min(previewWidth, window.innerWidth - 52),
+                      height: Math.min(previewHeight, window.innerHeight - 404)
+                    }}
+                  >
                     {screenStream ? (
                       <>
                         <canvas
@@ -873,38 +913,45 @@ function App() {
                       </div>
                     )}
                     <Rnd
-                      className=''
+                      className=""
                       size={{
-                        width: layout.widthPct ? layout.widthPct * Math.min(previewWidth, window.innerWidth - 52) : layout.width,
-                        height: layout.heightPct ? layout.heightPct * Math.min(previewHeight, window.innerHeight - 404) : layout.height
+                        width: layout.widthPct
+                          ? layout.widthPct * Math.min(previewWidth, window.innerWidth - 52)
+                          : layout.width,
+                        height: layout.heightPct
+                          ? layout.heightPct * Math.min(previewHeight, window.innerHeight - 404)
+                          : layout.height
                       }}
                       position={{
-                        x: layout.xPct ? layout.xPct * Math.min(previewWidth, window.innerWidth - 52) : layout.x,
-                        y: layout.yPct ? layout.yPct * Math.min(previewHeight, window.innerHeight - 404) : layout.y
+                        x: layout.xPct
+                          ? layout.xPct * Math.min(previewWidth, window.innerWidth - 52)
+                          : layout.x,
+                        y: layout.yPct
+                          ? layout.yPct * Math.min(previewHeight, window.innerHeight - 404)
+                          : layout.y
                       }}
                       onDragStop={(e, d) =>
                         handleLayoutChange(
                           d.x,
                           d.y,
-                          layout.widthPct ? layout.widthPct * Math.min(previewWidth, window.innerWidth - 52) : layout.width,
-                          layout.heightPct ? layout.heightPct * Math.min(previewHeight, window.innerHeight - 404) : layout.height
+                          layout.widthPct
+                            ? layout.widthPct * Math.min(previewWidth, window.innerWidth - 52)
+                            : layout.width,
+                          layout.heightPct
+                            ? layout.heightPct * Math.min(previewHeight, window.innerHeight - 404)
+                            : layout.height
                         )
                       }
                       onResizeStop={(e, dir, ref, delta, pos) => {
-                        const w = parseInt(ref.style.width);
-                        const h = parseInt(ref.style.height);
-                        handleLayoutChange(
-                          pos.x,
-                          pos.y,
-                          w,
-                          h
-                        );
+                        const w = parseInt(ref.style.width)
+                        const h = parseInt(ref.style.height)
+                        handleLayoutChange(pos.x, pos.y, w, h)
                       }}
                       bounds="parent"
                       style={{ zIndex: 1 }}
                       lockAspectRatio={aspectLock}
                     >
-                      <div className='absolute top-0 left-0 w-full h-full z-2 border-[2px] transition-all duration-300 border-transparent hover:border-pink-600/33 rounded-sm'></div>
+                      <div className="absolute top-0 left-0 w-full h-full z-2 border-[2px] transition-all duration-300 border-transparent hover:border-pink-600/33 rounded-sm"></div>
                       <img
                         src={toFileUrl(activeSticker.path)}
                         alt="active"
@@ -926,7 +973,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={aspectLock}
-                      onChange={e => setAspectLock(e.target.checked)}
+                      onChange={(e) => setAspectLock(e.target.checked)}
                       className="accent-pink-600"
                     />
                     Lock aspect ratio
@@ -935,8 +982,14 @@ function App() {
 
                 {/* Size Dialog */}
                 {sizeDialogOpen && (
-                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeSizeDialog}>
-                    <div className="bg-card border rounded-lg p-6 w-80 max-w-sm" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                    onClick={closeSizeDialog}
+                  >
+                    <div
+                      className="bg-card border rounded-lg p-6 w-80 max-w-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <h3 className="text-lg font-semibold mb-4">Set Sticker Size</h3>
                       <div className="space-y-4">
                         <div>
@@ -946,7 +999,7 @@ function App() {
                             min={24}
                             max={Math.min(previewWidth, window.innerWidth - 52)}
                             value={tempSize.width}
-                            onChange={e => handleTempSizeChange('width', e.target.value)}
+                            onChange={(e) => handleTempSizeChange('width', e.target.value)}
                             placeholder="Enter width"
                           />
                         </div>
@@ -957,7 +1010,7 @@ function App() {
                             min={24}
                             max={Math.min(previewHeight, window.innerHeight - 404)}
                             value={tempSize.height}
-                            onChange={e => handleTempSizeChange('height', e.target.value)}
+                            onChange={(e) => handleTempSizeChange('height', e.target.value)}
                             placeholder="Enter height"
                           />
                         </div>
@@ -969,11 +1022,7 @@ function App() {
                           >
                             Apply
                           </Button>
-                          <Button
-                            onClick={closeSizeDialog}
-                            variant="outline"
-                            className="flex-1"
-                          >
+                          <Button onClick={closeSizeDialog} variant="outline" className="flex-1">
                             Cancel
                           </Button>
                         </div>
@@ -990,18 +1039,15 @@ function App() {
                 {/* Preview Screen Selector */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Preview Screen:</label>
-                  <Select
-                    value={selectedScreen?.id || ''}
-                    onValueChange={handleScreenSelection}
-                  >
+                  <Select value={selectedScreen?.id || ''} onValueChange={handleScreenSelection}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select screen for preview" />
                     </SelectTrigger>
                     <SelectContent>
                       {screens.map((screen) => (
                         <SelectItem key={screen.id} value={screen.id}>
-                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`} 
-                          ({screen.bounds.width}x{screen.bounds.height})
+                          {screen.primary ? 'Primary Display' : `Display ${screen.index + 1}`}(
+                          {screen.bounds.width}x{screen.bounds.height})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1033,7 +1079,10 @@ function App() {
             <div className="flex gap-4 flex-wrap mb-8">
               {stickers.length === 0 && <div>No stickers yet.</div>}
               {stickers.map((sticker, i) => (
-                <div key={i} className="bg-muted p-2 px-[30px] pb-[36px] rounded-lg flex flex-col items-center relative group">
+                <div
+                  key={i}
+                  className="bg-muted p-2 px-[30px] pb-[36px] rounded-lg flex flex-col items-center relative group"
+                >
                   <img
                     src={toFileUrl(sticker.path)}
                     alt="sticker"
@@ -1048,9 +1097,7 @@ function App() {
                   >
                     <Trash className="w-2 h-2 text-red-500" />
                   </Button>
-                  <div
-                    className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-400 group-hover:opacity-0"
-                  >
+                  <div className="text-xs text-center w-24 absolute bottom-[10px] truncate transition-opacity duration-400 group-hover:opacity-0">
                     {`Sticker ${i + 1}`}
                   </div>
                   <div className="flex gap-2 absolute bottom-[6px] opacity-0 duration-400 group-hover:opacity-100">
@@ -1072,7 +1119,6 @@ function App() {
                 </div>
               ))}
             </div>
-            
           </TabsContent>
           <TabsContent value="Settings">
             <div className="w-full flex flex-col gap-4">
@@ -1080,22 +1126,26 @@ function App() {
               <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
                 <div className="space-y-0.5">
                   <div className="font-medium">Always on top</div>
-                  <div className="text-muted-foreground text-sm">Keep the window always on top of other windows.</div>
+                  <div className="text-muted-foreground text-sm">
+                    Keep the window always on top of other windows.
+                  </div>
                 </div>
                 <Switch
                   checked={settings.alwaysOnTop}
-                  onCheckedChange={v => handleSettingsChange('alwaysOnTop', v)}
+                  onCheckedChange={(v) => handleSettingsChange('alwaysOnTop', v)}
                 />
               </div>
               {/* Start on system startup */}
               <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
                 <div className="space-y-0.5">
                   <div className="font-medium">Start on system startup</div>
-                  <div className="text-muted-foreground text-sm">Launch the app automatically when your system starts.</div>
+                  <div className="text-muted-foreground text-sm">
+                    Launch the app automatically when your system starts.
+                  </div>
                 </div>
                 <Switch
                   checked={autoLaunch}
-                  onCheckedChange={v => {
+                  onCheckedChange={(v) => {
                     setAutoLaunch(v)
                     handleSettingsChange('startup', v)
                   }}
@@ -1105,22 +1155,26 @@ function App() {
               <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
                 <div className="space-y-0.5">
                   <div className="font-medium">Hide sticker capture</div>
-                  <div className="text-muted-foreground text-sm">Protect stickers from being captured in screenshots.</div>
+                  <div className="text-muted-foreground text-sm">
+                    Protect stickers from being captured in screenshots.
+                  </div>
                 </div>
                 <Switch
                   checked={settings.hideStickerCapture}
-                  onCheckedChange={v => handleSettingsChange('hideStickerCapture', v)}
+                  onCheckedChange={(v) => handleSettingsChange('hideStickerCapture', v)}
                 />
               </div>
               {/* Theme select */}
               <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card/80">
                 <div className="space-y-0.5">
                   <div className="font-medium">Theme</div>
-                  <div className="text-muted-foreground text-sm">Choose between dark and light mode.</div>
+                  <div className="text-muted-foreground text-sm">
+                    Choose between dark and light mode.
+                  </div>
                 </div>
                 <Select
                   value={settings.theme}
-                  onValueChange={v => handleSettingsChange('theme', v)}
+                  onValueChange={(v) => handleSettingsChange('theme', v)}
                 >
                   <SelectTrigger className="w-32">
                     <SelectValue />

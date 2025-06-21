@@ -21,7 +21,7 @@ const api = {
   /**
    * Return info for a specific screen
    */
-  getScreenInfo: (screenId) => ipcRenderer.invoke('get-screen-info', screenId),
+  getScreenInfoById: (screenId) => ipcRenderer.invoke('get-screen-info', screenId),
 
   /**
    * Return the desktop-capturer ID for the primary screen.

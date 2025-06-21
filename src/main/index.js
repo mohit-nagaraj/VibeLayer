@@ -30,7 +30,7 @@ function getAllScreens() {
 // Create sticker window for a specific screen
 function createStickerWindow(screenInfo) {
   const { bounds, id } = screenInfo
-  
+
   const stickerWindow = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
@@ -54,7 +54,7 @@ function createStickerWindow(screenInfo) {
 
   stickerWindow.setIgnoreMouseEvents(true, { forward: true })
   stickerWindow.setContentProtection(true)
-  
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     stickerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/sticker.html')
   } else {
@@ -63,7 +63,7 @@ function createStickerWindow(screenInfo) {
 
   // Store reference to this window
   stickerWindows.set(id, stickerWindow)
-  
+
   return stickerWindow
 }
 
@@ -103,7 +103,7 @@ function createWindows() {
 
   // Create sticker windows for all screens
   const screens = getAllScreens()
-  screens.forEach(screenInfo => {
+  screens.forEach((screenInfo) => {
     createStickerWindow(screenInfo)
   })
 
@@ -113,7 +113,7 @@ function createWindows() {
 const stickersDir = path.join(app.getPath('userData'), 'stickers')
 if (!fs.existsSync(stickersDir)) fs.mkdirSync(stickersDir)
 
-const appLauncher = new AutoLaunch({ 
+const appLauncher = new AutoLaunch({
   name: 'VibeLayer',
   path: app.getPath('exe'),
   args: ['--no-sandbox']
@@ -249,14 +249,14 @@ ipcMain.handle('set-sticker-content-protection', (_, value) => {
 
 ipcMain.on('update-sticker-layout', (_, layout) => {
   console.log('Main received layout update:', layout)
-  
+
   // Send to all sticker windows or specific screen if specified
   const targetScreenId = layout.screenId
-  const windowsToUpdate = targetScreenId 
+  const windowsToUpdate = targetScreenId
     ? [stickerWindows.get(targetScreenId)].filter(Boolean)
     : Array.from(stickerWindows.values())
 
-  windowsToUpdate.forEach(stickerWindow => {
+  windowsToUpdate.forEach((stickerWindow) => {
     if (stickerWindow && !stickerWindow.isDestroyed()) {
       console.log('Main forwarding layout update to sticker window')
       stickerWindow.webContents.send('update-sticker-layout', layout)
@@ -270,23 +270,21 @@ ipcMain.handle('get-all-screens', () => {
 
 ipcMain.handle('get-screen-info', (_, screenId) => {
   const screens = getAllScreens()
-  return screens.find(screen => screen.id === screenId) || screens[0]
+  return screens.find((screen) => screen.id === screenId) || screens[0]
 })
 
 ipcMain.handle('get-primary-screen-source-id', async (_, screenId) => {
   try {
     const sources = await desktopCapturer.getSources({ types: ['screen'] })
-    
+
     if (screenId) {
       // Find source for specific screen
-      const screenSources = sources.filter(source => 
-        source.display_id === screenId.toString()
-      )
+      const screenSources = sources.filter((source) => source.display_id === screenId.toString())
       if (screenSources.length > 0) {
         return screenSources[0].id
       }
     }
-    
+
     // Fallback to primary screen
     if (!sources?.length) throw new Error('No screen sources found')
     return sources[0].id
