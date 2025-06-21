@@ -1,4 +1,4 @@
-![Build Status](https://img.shields.io/github/actions/workflow/status/mohit-nagaraj/VibeLayer/build.yml)
+![Build Status](https://img.shields.io/github/actions/workflow/status/mohit-nagaraj/VibeLayer/build-ubuntu.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/a4939d005a0c4d6ebf71f610292a3842)](https://app.codacy.com/gh/mohit-nagaraj/VibeLayer/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 # ✨ VibeLayer: Your Adorable Desktop Companion! 🐾 
