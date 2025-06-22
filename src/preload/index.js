@@ -43,7 +43,12 @@ const api = {
    */
   async listDesktopSources(opts = { types: ['screen', 'window'] }) {
     return await ipcRenderer.invoke('DESKTOP_CAPTURER_GET_SOURCES', opts)
-  }
+  },
+  
+  // Window controls
+  minimizeWindow: () => ipcRenderer.invoke('window-minimize'),
+  maximizeWindow: () => ipcRenderer.invoke('window-maximize'),
+  closeWindow: () => ipcRenderer.invoke('window-close')
 }
 
 // ----------------------------------------------------------

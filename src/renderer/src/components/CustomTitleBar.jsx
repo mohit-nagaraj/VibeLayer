@@ -2,8 +2,23 @@ import React from 'react'
 import { Button } from './ui/button'
 
 export default function CustomTitleBar({ title = 'VibeLayer', theme = 'dark' }) {
-  // Use window.electron.ipcRenderer if available
-  const ipcRenderer = window.electron?.ipcRenderer
+  // Use window.api for safe IPC calls
+  const api = window.api
+
+  const handleMinimize = () => {
+    console.log('Minimize button clicked')
+    api?.minimizeWindow()
+  }
+
+  const handleMaximize = () => {
+    console.log('Maximize button clicked')
+    api?.maximizeWindow()
+  }
+
+  const handleClose = () => {
+    console.log('Close button clicked')
+    api?.closeWindow()
+  }
 
   return (
     <div
@@ -11,12 +26,12 @@ export default function CustomTitleBar({ title = 'VibeLayer', theme = 'dark' }) 
       style={{ WebkitAppRegion: 'drag', userSelect: 'none', height: 40 }}
     >
       <span className="font-semibold tracking-wide text-base">{title}</span>
-      <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' }}>
+      <div className="flex gap-2 z-50" style={{ WebkitAppRegion: 'no-drag' }}>
         <Button
           size="icon"
           variant="ghost"
           aria-label="Minimize"
-          onClick={() => ipcRenderer?.invoke('window-minimize')}
+          onClick={handleMinimize}
         >
           <svg width="16" height="16" viewBox="0 0 16 16">
             <rect x="3" y="8" width="10" height="2" rx="1" fill="currentColor" />
@@ -26,7 +41,7 @@ export default function CustomTitleBar({ title = 'VibeLayer', theme = 'dark' }) 
           size="icon"
           variant="ghost"
           aria-label="Maximize"
-          onClick={() => ipcRenderer?.invoke('window-maximize')}
+          onClick={handleMaximize}
         >
           <svg width="16" height="16" viewBox="0 0 16 16">
             <rect
@@ -41,12 +56,7 @@ export default function CustomTitleBar({ title = 'VibeLayer', theme = 'dark' }) 
             />
           </svg>
         </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          aria-label="Close"
-          onClick={() => ipcRenderer?.invoke('window-close')}
-        >
+        <Button size="icon" variant="ghost" aria-label="Close" onClick={handleClose}>
           <svg width="16" height="16" viewBox="0 0 16 16">
             <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" strokeWidth="2" />
             <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" strokeWidth="2" />
