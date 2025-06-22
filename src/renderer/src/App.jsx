@@ -10,6 +10,7 @@ import { toFileUrl } from './utils/fileUtils'
 import { useStickerManagement } from './hooks/useStickerManagement'
 import { useScreenManagement } from './hooks/useScreenManagement'
 import { useSettings } from './hooks/useSettings'
+import { useMusicPlayer } from './hooks/useMusicPlayer'
 
 const TABS = ['Search', 'Layout', 'Settings', 'Music']
 
@@ -56,6 +57,16 @@ function App() {
     handleSettingsChange,
     handleAutoLaunchChange
   } = useSettings()
+
+  const {
+    audioRef,
+    currentTrack,
+    isPlaying,
+    togglePlayPause,
+    playNext,
+    playPrevious,
+    handleEnded
+  } = useMusicPlayer()
 
   useEffect(() => {
     fetchStickers()
@@ -278,7 +289,13 @@ function App() {
             />
           </TabsContent>
           <TabsContent value="Music">
-            <MusicTab />
+            <MusicTab 
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              togglePlayPause={togglePlayPause}
+              playNext={playNext}
+              playPrevious={playPrevious}
+            />
           </TabsContent>
         </Tabs>
 
@@ -287,6 +304,14 @@ function App() {
             {toast}
           </div>
         )}
+
+        {/* Audio element that persists across tab switches */}
+        <audio
+          ref={audioRef}
+          src={currentTrack.musicSrc}
+          onEnded={handleEnded}
+          className="hidden"
+        />
       </div>
     </div>
   )

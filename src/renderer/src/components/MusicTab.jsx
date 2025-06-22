@@ -1,23 +1,13 @@
-import { useMusicPlayer } from '../hooks/useMusicPlayer'
 import { Button } from './ui/button'
 import { Play, Pause, StepBack, StepForward } from 'lucide-react'
+import cover from '../assets/cd.png'
 
-const MusicTab = () => {
-  const {
-    audioRef,
-    currentTrack,
-    isPlaying,
-    togglePlayPause,
-    playNext,
-    playPrevious,
-    handleEnded
-  } = useMusicPlayer()
-
+const MusicTab = ({ currentTrack, isPlaying, togglePlayPause, playNext, playPrevious }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full pt-12">
       <div className="relative w-64 h-64 mb-8">
         <img
-          src={currentTrack.cover}
+          src={cover}
           alt="album cover"
           className={`rounded-full w-full h-full object-cover shadow-lg ${
             isPlaying ? 'animate-spin' : ''
@@ -45,13 +35,6 @@ const MusicTab = () => {
           <StepForward className="w-6 h-6" />
         </Button>
       </div>
-
-      <audio
-        ref={audioRef}
-        src={currentTrack.musicSrc}
-        onEnded={handleEnded}
-        className="hidden"
-      />
     </div>
   )
 }
