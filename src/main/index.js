@@ -116,7 +116,8 @@ if (!fs.existsSync(stickersDir)) fs.mkdirSync(stickersDir)
 const appLauncher = new AutoLaunch({
   name: 'VibeLayer',
   path: app.getPath('exe'),
-  args: ['--no-sandbox']
+  args: ['--no-sandbox'],
+  isHidden: true
 })
 
 const store = new (Store.default || Store)()
@@ -233,8 +234,14 @@ ipcMain.handle('window-maximize', () => {
   }
 })
 ipcMain.handle('window-close', () => {
-  const win = BrowserWindow.getAllWindows().find((w) => w.isFocused())
-  if (win) win.close()
+  if (managerWindow) {
+    managerWindow.close()
+  }
+  stickerWindows.forEach((stickerWindow) => {
+    if (stickerWindow && !stickerWindow.isDestroyed()) {
+      stickerWindow.close()
+    }
+  })
 })
 
 ipcMain.handle('set-sticker-content-protection', (_, value) => {
